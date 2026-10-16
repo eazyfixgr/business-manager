@@ -406,8 +406,17 @@ const el: Translation = {
     signIn: 'Σύνδεση',
     signOut: 'Αποσύνδεση',
     signingIn: 'Σύνδεση…',
+    signUp: 'Δημιουργία λογαριασμού',
+    signUpTitle: 'Δημιούργησε τον χώρο σου',
+    signUpSubtitle: 'Εγγράψου για να αρχίσεις να οργανώνεις το γραφείο σου.',
+    signingUp: 'Δημιουργία…',
+    noAccount: 'Δεν έχεις λογαριασμό;',
+    haveAccount: 'Έχεις ήδη λογαριασμό;',
     errorInvalid: 'Λάθος email ή κωδικός.',
     errorGeneric: 'Κάτι πήγε στραβά. Δοκίμασε ξανά.',
+    errorEmailInUse: 'Το email χρησιμοποιείται ήδη.',
+    errorWeakPassword: 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.',
+    errorInvalidEmail: 'Συμπλήρωσε έγκυρο email.',
   },
 };
 

@@ -2,12 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Single-owner workspace: only the owner's account can read/write.
-    // To support multiple users/companies later, replace the fixed UID with
-    // a check against per-company ownership documents.
-    match /{document=**} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == 'Ue9lt5GHJtgCilERYPPQ8gkFTWr1';
+    // Multi-tenant: each account can only read/write documents that it owns
+    // (ownerId === uid). New accounts start with an empty workspace.
+    match /{collection}/{document} {
+      allow read, delete: if request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid;
+
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.ownerId
+        && request.resource.data.ownerId == request.auth.uid;
     }
   }
 }

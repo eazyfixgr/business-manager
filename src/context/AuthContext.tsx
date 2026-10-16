@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as fbSignOut,
@@ -18,6 +19,7 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -39,12 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  const signUp = async (email: string, password: string) => {
+    await createUserWithEmailAndPassword(auth, email, password);
+  };
+
   const signOut = async () => {
     await fbSignOut(auth);
   };
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, signIn, signOut }),
+    () => ({ user, loading, signIn, signUp, signOut }),
     [user, loading],
   );
 

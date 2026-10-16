@@ -405,8 +405,17 @@ const en = {
     signIn: 'Sign in',
     signOut: 'Sign out',
     signingIn: 'Signing in…',
+    signUp: 'Create account',
+    signUpTitle: 'Create your workspace',
+    signUpSubtitle: 'Sign up to start organizing your office.',
+    signingUp: 'Creating…',
+    noAccount: "Don't have an account?",
+    haveAccount: 'Already have an account?',
     errorInvalid: 'Invalid email or password.',
     errorGeneric: 'Something went wrong. Please try again.',
+    errorEmailInUse: 'This email is already registered.',
+    errorWeakPassword: 'Password must be at least 6 characters.',
+    errorInvalidEmail: 'Please enter a valid email.',
   },
 };
 

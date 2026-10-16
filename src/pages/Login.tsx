@@ -3,9 +3,12 @@ import { Building2, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 
+type Mode = 'signin' | 'signup';
+
 export function Login() {
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const t = useI18n();
+  const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -16,19 +19,37 @@ export function Login() {
     setError(null);
     setBusy(true);
     try {
-      await signIn(email, password);
+      if (mode === 'signup') {
+        await signUp(email, password);
+      } else {
+        await signIn(email, password);
+      }
     } catch (err) {
       const code = (err as { code?: string })?.code ?? '';
-      const invalid =
-        code === 'auth/invalid-credential' ||
-        code === 'auth/user-not-found' ||
-        code === 'auth/wrong-password' ||
-        code === 'auth/invalid-email';
-      setError(invalid ? t.auth.errorInvalid : t.auth.errorGeneric);
+      if (mode === 'signup') {
+        if (code === 'auth/email-already-in-use') setError(t.auth.errorEmailInUse);
+        else if (code === 'auth/weak-password') setError(t.auth.errorWeakPassword);
+        else if (code === 'auth/invalid-email') setError(t.auth.errorInvalidEmail);
+        else setError(t.auth.errorGeneric);
+      } else {
+        const invalid =
+          code === 'auth/invalid-credential' ||
+          code === 'auth/user-not-found' ||
+          code === 'auth/wrong-password' ||
+          code === 'auth/invalid-email';
+        setError(invalid ? t.auth.errorInvalid : t.auth.errorGeneric);
+      }
     } finally {
       setBusy(false);
     }
   };
+
+  const switchMode = () => {
+    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
+    setError(null);
+  };
+
+  const isSignup = mode === 'signup';
 
   return (
     <div className="auth-screen">
@@ -36,8 +57,10 @@ export function Login() {
         <span className="brand-logo">
           <Building2 size={26} />
         </span>
-        <h1>{t.app.name}</h1>
-        <p className="auth-subtitle">{t.auth.subtitle}</p>
+        <h1>{isSignup ? t.auth.signUpTitle : t.app.name}</h1>
+        <p className="auth-subtitle">
+          {isSignup ? t.auth.signUpSubtitle : t.auth.subtitle}
+        </p>
 
         <form className="auth-form" onSubmit={onSubmit}>
           {error && <div className="auth-error">{error}</div>}
@@ -61,8 +84,9 @@ export function Login() {
               id="password"
               className="input"
               type="password"
-              autoComplete="current-password"
+              autoComplete={isSignup ? 'new-password' : 'current-password'}
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -72,13 +96,22 @@ export function Login() {
             {busy ? (
               <>
                 <Loader2 size={16} className="spin" />
-                {t.auth.signingIn}
+                {isSignup ? t.auth.signingUp : t.auth.signingIn}
               </>
+            ) : isSignup ? (
+              t.auth.signUp
             ) : (
               t.auth.signIn
             )}
           </button>
         </form>
+
+        <div className="auth-switch">
+          {isSignup ? t.auth.haveAccount : t.auth.noAccount}{' '}
+          <button type="button" onClick={switchMode}>
+            {isSignup ? t.auth.signIn : t.auth.signUp}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -752,6 +752,26 @@ a.stat-card:hover {
   border-top: 1px solid var(--border);
 }
 
+/* ---------- Auth switch ---------- */
+.auth-switch {
+  margin-top: var(--space-5);
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.auth-switch button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0;
+}
+
+.auth-switch button:hover {
+  text-decoration: underline;
+}
+
 /* ---------- Toast (extended) ---------- */
 .toast-message {
   flex: 1;
