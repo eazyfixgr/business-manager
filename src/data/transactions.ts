@@ -14,6 +14,7 @@ export interface Transaction {
   ownerId: string;
   direction: TransactionDirection;
   amount: number;
+  total?: number;
   date: string;
   status: TransactionStatus;
   contactId?: string;
@@ -45,6 +46,7 @@ function normalizeTransaction(raw: Transaction): Transaction {
     ...raw,
     direction: raw.direction ?? 'income',
     amount: Number(raw.amount) || 0,
+    total: raw.total != null ? Number(raw.total) : undefined,
     status: raw.status ?? 'paid',
     category: raw.category ?? 'other',
     tags: raw.tags ?? [],

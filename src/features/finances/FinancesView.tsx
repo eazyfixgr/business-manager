@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -14,7 +14,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useToast } from '../../components/ui/Toast';
 import { useI18n } from '../../i18n';
 import { useSettings } from '../../context/SettingsContext';
-import { formatDate, formatMoney } from '../../lib/format';
+import { formatDate, formatMoney, todayIso } from '../../lib/format';
 import { useContacts } from '../../hooks/useContacts';
 import { useTransactions } from '../../hooks/useTransactions';
 import {
@@ -26,7 +26,8 @@ import {
   type TransactionDirection,
   type TransactionInput,
 } from '../../data/transactions';
-import { isPresetCategory } from './categories';
+import { ContactPicker, type ContactPickerValue } from '../contacts/ContactPicker';
+import { isPresetCategory, PRESET_CATEGORIES } from './categories';
 import { TransactionForm } from './TransactionForm';
 
 type DirectionFilter = TransactionDirection | 'all';
@@ -51,6 +52,13 @@ export function FinancesView() {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [qDirection, setQDirection] = useState<TransactionDirection>('income');
+  const [qAmount, setQAmount] = useState('');
+  const [qContact, setQContact] = useState<ContactPickerValue>({});
+  const [qCategory, setQCategory] = useState('secretariat');
+  const [qReference, setQReference] = useState('');
+  const [qDate, setQDate] = useState(todayIso());
 
   const nameById = useMemo(
     () => new Map(contacts.map((c) => [c.id, c.name])),
@@ -110,14 +118,14 @@ export function FinancesView() {
     setFormOpen(true);
   };
 
-  const handleSubmit = async (input: TransactionInput) => {
+  const handleSubmit = async (inputs: TransactionInput[]) => {
     setBusy(true);
     try {
       if (editing) {
-        await updateTransaction(editing.id, input);
+        await updateTransaction(editing.id, inputs[0]);
         notify(t.finances.updated);
       } else {
-        await createTransaction(input);
+        for (const input of inputs) await createTransaction(input);
         notify(t.finances.created);
       }
       setFormOpen(false);
@@ -126,6 +134,37 @@ export function FinancesView() {
       notify(err instanceof Error ? err.message : String(err), 'error');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleQuickAdd = async (e: FormEvent) => {
+    e.preventDefault();
+    const amount = Number(qAmount.replace(',', '.'));
+    if (!qAmount.trim() || Number.isNaN(amount) || amount <= 0) {
+      notify(t.finances.amountRequired, 'error');
+      return;
+    }
+    try {
+      await createTransaction({
+        direction: qDirection,
+        amount,
+        date: qDate || todayIso(),
+        status: 'paid',
+        contactId: qContact.contactId,
+        contactName: qContact.contactId
+          ? undefined
+          : qContact.contactName || undefined,
+        category: qCategory,
+        reference: qReference.trim() || undefined,
+        method: 'cash',
+        tags: [],
+      });
+      notify(t.finances.created);
+      setQAmount('');
+      setQContact({});
+      setQReference('');
+    } catch (err) {
+      notify(err instanceof Error ? err.message : String(err), 'error');
     }
   };
 
@@ -180,6 +219,74 @@ export function FinancesView() {
           <strong>{formatMoney(totals.payable, language)}</strong>
         </div>
       </div>
+
+      <form className="fin-quick" onSubmit={handleQuickAdd}>
+        <div className="segmented" role="group" aria-label={t.finances.field.direction}>
+          <button
+            type="button"
+            className={qDirection === 'income' ? 'active' : ''}
+            onClick={() => setQDirection('income')}
+          >
+            {t.finances.income}
+          </button>
+          <button
+            type="button"
+            className={qDirection === 'expense' ? 'active' : ''}
+            onClick={() => setQDirection('expense')}
+          >
+            {t.finances.expense}
+          </button>
+        </div>
+        <input
+          className="input fin-quick-amount"
+          type="number"
+          step="0.01"
+          inputMode="decimal"
+          placeholder={t.finances.field.amount}
+          value={qAmount}
+          onChange={(e) => setQAmount(e.target.value)}
+        />
+        <div className="fin-quick-contact">
+          <ContactPicker
+            contacts={contacts}
+            value={qContact}
+            onChange={setQContact}
+            addLabel={t.finances.addClient}
+            namePlaceholder={t.finances.field.contact}
+            freeTextLabel={t.finances.freeText}
+            inputId="fq-contact"
+          />
+        </div>
+        <select
+          className="select fin-quick-category"
+          value={qCategory}
+          onChange={(e) => setQCategory(e.target.value)}
+          aria-label={t.finances.field.category}
+        >
+          {PRESET_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {t.finances.category[category]}
+            </option>
+          ))}
+        </select>
+        <input
+          className="input fin-quick-ref"
+          placeholder={t.finances.field.reference}
+          value={qReference}
+          onChange={(e) => setQReference(e.target.value)}
+        />
+        <input
+          className="input fin-quick-date"
+          type="date"
+          value={qDate}
+          onChange={(e) => setQDate(e.target.value)}
+          aria-label={t.finances.field.date}
+        />
+        <button type="submit" className="btn btn-primary">
+          <Plus size={16} />
+          {t.common.add}
+        </button>
+      </form>
 
       <div className="toolbar">
         <div className="search-box">

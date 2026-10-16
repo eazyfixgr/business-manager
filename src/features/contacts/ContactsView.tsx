@@ -250,7 +250,9 @@ export function ContactsView({ role }: ContactsViewProps) {
                             : 'badge-neutral'
                         }`}
                       >
-                        {code.value}
+                        {code.type === 'technical'
+                          ? `Α/Π ${code.value}`
+                          : code.value}
                       </span>
                     ))}
                   </div>

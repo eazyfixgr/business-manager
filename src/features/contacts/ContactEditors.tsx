@@ -71,7 +71,9 @@ export function CodesEditor({ value, onChange }: EditorProps<ContactCode>) {
           </select>
           <input
             className="input"
-            placeholder={t.contacts.field.codeValue}
+            placeholder={
+              item.type === 'technical' ? 'Α/Π xxxxx' : t.contacts.field.codeValue
+            }
             value={item.value}
             onChange={(e) => patch({ value: e.target.value })}
           />
