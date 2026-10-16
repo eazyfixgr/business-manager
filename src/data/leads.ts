@@ -64,10 +64,14 @@ function normalizeLead(raw: Lead): Lead {
   };
 }
 
-export function newLeadEvent(stage: LeadStage, note?: string): LeadEvent {
+export function newLeadEvent(
+  stage: LeadStage,
+  at?: string,
+  note?: string,
+): LeadEvent {
   return {
     id: crypto.randomUUID(),
-    at: new Date().toISOString().slice(0, 10),
+    at: at || new Date().toISOString().slice(0, 10),
     stage,
     note,
   };

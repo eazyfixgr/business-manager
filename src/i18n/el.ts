@@ -240,6 +240,7 @@ const el: Translation = {
     noLeads: 'Δεν υπάρχουν ενδιαφερόμενοι ακόμα.',
     offers: 'Προσφορά',
     history: 'Ιστορικό',
+    when: 'Πότε έγινε;',
     followUpPrefix: 'Follow up',
     followUpCreated: 'Προστέθηκε υπενθύμιση στις εκκρεμότητες',
     activeLeads: 'Ενεργοί',

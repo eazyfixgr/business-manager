@@ -239,6 +239,7 @@ const en = {
     noLeads: 'No interested parties yet.',
     offers: 'Offer',
     history: 'History',
+    when: 'When did it happen?',
     followUpPrefix: 'Follow up',
     followUpCreated: 'Reminder added to tasks',
     activeLeads: 'Active',

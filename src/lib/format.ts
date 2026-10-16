@@ -21,6 +21,12 @@ export function addDaysIso(days: number): string {
   return new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 }
 
+export function addDaysToIso(iso: string, days: number): string {
+  const base = new Date(`${iso}T00:00:00`);
+  base.setDate(base.getDate() + days);
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
+}
+
 export function nowLocalKey(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');

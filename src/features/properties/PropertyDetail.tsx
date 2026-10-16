@@ -14,10 +14,12 @@ import {
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Field } from '../../components/ui/Field';
+import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
 import { useI18n } from '../../i18n';
 import { useSettings } from '../../context/SettingsContext';
-import { addDaysIso, formatDate, formatMoney, todayIso } from '../../lib/format';
+import { addDaysToIso, formatDate, formatMoney, todayIso } from '../../lib/format';
 import { useContacts } from '../../hooks/useContacts';
 import { useProperties } from '../../hooks/useProperties';
 import { useLeads } from '../../hooks/useLeads';
@@ -73,6 +75,11 @@ export function PropertyDetail() {
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [stagePrompt, setStagePrompt] = useState<{
+    lead: Lead;
+    stage: LeadStage;
+  } | null>(null);
+  const [stageDate, setStageDate] = useState(todayIso());
 
   const nameById = useMemo(
     () => new Map(contacts.map((c) => [c.id, c.name])),
@@ -94,20 +101,20 @@ export function PropertyDetail() {
       ? nameById.get(lead.contactId) ?? lead.contactName ?? '—'
       : lead.contactName || lead.phone || lead.email || '—';
 
-  const applyStage = async (lead: Lead, stage: LeadStage) => {
+  const applyStage = async (lead: Lead, stage: LeadStage, date: string) => {
     if (!property) return;
     const patch: Partial<LeadInput> = {
       stage,
-      history: [...lead.history, newLeadEvent(stage)],
+      history: [...lead.history, newLeadEvent(stage, date)],
     };
-    if (stage === 'docs_sent') patch.docsSentDate = todayIso();
-    if (stage === 'mandate_signed') patch.mandateDate = todayIso();
+    if (stage === 'docs_sent') patch.docsSentDate = date;
+    if (stage === 'mandate_signed') patch.mandateDate = date;
     try {
       await patchLead(lead.id, patch);
       if (stage === 'docs_sent') {
         await createTodo({
           title: `${t.properties.followUpPrefix}: ${leadName(lead)} — ${property.code}`,
-          dueDate: addDaysIso(7),
+          dueDate: addDaysToIso(date, 7),
           priority: 'normal',
           status: 'open',
           tags: ['follow-up'],
@@ -339,7 +346,10 @@ export function PropertyDetail() {
                       key={action.stage}
                       type="button"
                       className={`btn btn-outline btn-sm ${active ? 'active-action' : ''}`}
-                      onClick={() => applyStage(lead, action.stage)}
+                      onClick={() => {
+                        setStagePrompt({ lead, stage: action.stage });
+                        setStageDate(todayIso());
+                      }}
                     >
                       <Icon size={13} />
                       {action.label}
@@ -414,6 +424,45 @@ export function PropertyDetail() {
         onConfirm={handleLeadDelete}
         onClose={() => setDeletingLead(null)}
       />
+
+      <Modal
+        open={!!stagePrompt}
+        title={stagePrompt ? t.properties.stage[stagePrompt.stage] : ''}
+        onClose={() => setStagePrompt(null)}
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setStagePrompt(null)}
+            >
+              {t.common.cancel}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={async () => {
+                if (stagePrompt) {
+                  await applyStage(stagePrompt.lead, stagePrompt.stage, stageDate);
+                  setStagePrompt(null);
+                }
+              }}
+            >
+              {t.common.confirm}
+            </button>
+          </>
+        }
+      >
+        <Field label={t.properties.when} htmlFor="stage-date">
+          <input
+            id="stage-date"
+            className="input"
+            type="date"
+            value={stageDate}
+            onChange={(e) => setStageDate(e.target.value)}
+          />
+        </Field>
+      </Modal>
     </div>
   );
 }
