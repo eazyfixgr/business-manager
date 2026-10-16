@@ -5,7 +5,13 @@ import {
   updateOwned,
 } from './firestore';
 
-export type ContactRole = 'client' | 'partner' | 'supplier' | 'lead';
+export type ContactRole =
+  | 'client'
+  | 'seller'
+  | 'buyer'
+  | 'partner'
+  | 'supplier'
+  | 'lead';
 
 export interface ContactAddress {
   street?: string;
@@ -83,6 +89,8 @@ const COLLECTION = 'contacts';
 
 export const CONTACT_ROLES: ContactRole[] = [
   'client',
+  'seller',
+  'buyer',
   'partner',
   'supplier',
   'lead',

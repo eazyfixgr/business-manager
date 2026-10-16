@@ -16,3 +16,7 @@ export function formatMoney(amount: number, language: string): string {
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+export function addDaysIso(days: number): string {
+  return new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+}

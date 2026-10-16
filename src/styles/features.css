@@ -640,6 +640,118 @@ a.stat-card:hover {
   }
 }
 
+/* ---------- Properties ---------- */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-4);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.contact-row.clickable {
+  cursor: pointer;
+}
+
+.property-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.property-meta-head {
+  display: flex;
+}
+
+.property-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+
+.property-meta-grid .small {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.lead-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.lead-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.lead-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.lead-name {
+  font-weight: 600;
+}
+
+.lead-offer {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.lead-head .contact-actions {
+  margin-left: auto;
+}
+
+.lead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.lead-actions .btn.active-action {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.lead-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.lead-history li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.82rem;
+}
+
+.lead-notes {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- Toast (extended) ---------- */
 .toast-message {
   flex: 1;
