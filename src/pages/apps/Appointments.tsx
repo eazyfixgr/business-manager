@@ -1,5 +1,5 @@
-import { AppPlaceholder } from '../../components/AppPlaceholder';
+import { AppointmentsView } from '../../features/appointments/AppointmentsView';
 
 export function Appointments() {
-  return <AppPlaceholder id="appointments" />;
+  return <AppointmentsView />;
 }

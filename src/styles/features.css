@@ -565,7 +565,7 @@ a.stat-card:hover {
 
 .dash-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 }

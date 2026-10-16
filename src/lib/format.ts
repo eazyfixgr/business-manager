@@ -20,3 +20,9 @@ export function todayIso(): string {
 export function addDaysIso(days: number): string {
   return new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 }
+
+export function nowLocalKey(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}

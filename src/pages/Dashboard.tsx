@@ -1,14 +1,22 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
 import { APPS } from '../config/apps';
 import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
-import { formatDate, formatMoney, todayIso } from '../lib/format';
+import { formatDate, formatMoney, nowLocalKey, todayIso } from '../lib/format';
 import { useTodos } from '../hooks/useTodos';
 import { useTransactions } from '../hooks/useTransactions';
 import { useContacts } from '../hooks/useContacts';
+import { useAppointments } from '../hooks/useAppointments';
 import { PRIORITY_WEIGHT } from '../data/todos';
+import { appointmentDateTime } from '../data/appointments';
 
 export function Dashboard() {
   const t = useI18n();
@@ -16,6 +24,7 @@ export function Dashboard() {
   const { todos } = useTodos();
   const { transactions } = useTransactions();
   const { contacts } = useContacts();
+  const { appointments } = useAppointments();
 
   const today = todayIso();
   const month = today.slice(0, 7);
@@ -63,6 +72,14 @@ export function Dashboard() {
 
   const recent = [...transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5);
+
+  const nowKey = nowLocalKey();
+  const upcomingAppointments = appointments
+    .filter(
+      (a) => a.status === 'scheduled' && appointmentDateTime(a) >= nowKey,
+    )
+    .sort((a, b) => appointmentDateTime(a).localeCompare(appointmentDateTime(b)))
     .slice(0, 5);
 
   const contactNameOf = (
@@ -181,6 +198,38 @@ export function Dashboard() {
                       {isIncome ? '+' : '−'}
                       {formatMoney(tx.amount, language)}
                     </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="dash-panel">
+          <div className="dash-panel-head">
+            <h2>{t.dashboard.upcomingAppointments}</h2>
+            <Link to="/appointments">{t.dashboard.viewAll}</Link>
+          </div>
+          {upcomingAppointments.length === 0 ? (
+            <p className="muted small">{t.dashboard.noAppointments}</p>
+          ) : (
+            <ul className="dash-list">
+              {upcomingAppointments.map((appointment) => {
+                const who = contactNameOf(
+                  appointment.contactId,
+                  appointment.contactName,
+                );
+                return (
+                  <li key={appointment.id}>
+                    <CalendarDays size={15} className="faint" />
+                    <div className="dash-item-main">
+                      <div>{appointment.title}</div>
+                      <div className="dash-item-meta">
+                        {formatDate(appointment.date)}
+                        {appointment.start ? ` · ${appointment.start}` : ''}
+                        {who ? ` · ${who}` : ''}
+                      </div>
+                    </div>
                   </li>
                 );
               })}
