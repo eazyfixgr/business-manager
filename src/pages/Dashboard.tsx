@@ -15,8 +15,10 @@ import { useTodos } from '../hooks/useTodos';
 import { useTransactions } from '../hooks/useTransactions';
 import { useContacts } from '../hooks/useContacts';
 import { useAppointments } from '../hooks/useAppointments';
+import { useInspections } from '../hooks/useInspections';
 import { PRIORITY_WEIGHT } from '../data/todos';
 import { appointmentDateTime } from '../data/appointments';
+import { OPEN_INSPECTION_STATUSES } from '../data/inspections';
 
 export function Dashboard() {
   const t = useI18n();
@@ -25,6 +27,7 @@ export function Dashboard() {
   const { transactions } = useTransactions();
   const { contacts } = useContacts();
   const { appointments } = useAppointments();
+  const { inspections } = useInspections();
 
   const today = todayIso();
   const month = today.slice(0, 7);
@@ -58,6 +61,10 @@ export function Dashboard() {
     }
     return { income, expense, balance: income - expense };
   }, [transactions, month]);
+
+  const pendingInspections = inspections.filter((i) =>
+    OPEN_INSPECTION_STATUSES.includes(i.status),
+  ).length;
 
   const pendingTotals = useMemo(() => {
     let toReceive = 0;
@@ -109,6 +116,10 @@ export function Dashboard() {
         <Link to="/clients" className="stat-card">
           <span>{t.dashboard.contacts}</span>
           <strong>{contacts.length}</strong>
+        </Link>
+        <Link to="/inspections" className="stat-card">
+          <span>{t.dashboard.pendingInspections}</span>
+          <strong>{pendingInspections}</strong>
         </Link>
         <Link to="/finances" className="stat-card stat-income">
           <span>{t.dashboard.monthIncome}</span>

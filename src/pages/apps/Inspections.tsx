@@ -1,5 +1,5 @@
-import { AppPlaceholder } from '../../components/AppPlaceholder';
+import { InspectionsView } from '../../features/inspections/InspectionsView';
 
 export function Inspections() {
-  return <AppPlaceholder id="inspections" />;
+  return <InspectionsView />;
 }
