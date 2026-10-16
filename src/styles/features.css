@@ -879,6 +879,64 @@ a.stat-card:hover {
   text-decoration: underline;
 }
 
+/* ---------- Info / notes ---------- */
+.note-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-3);
+}
+
+.note-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.note-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.note-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.note-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.note-content {
+  white-space: pre-wrap;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.note-textarea {
+  min-height: 180px;
+}
+
 /* ---------- Toast (extended) ---------- */
 .toast-message {
   flex: 1;

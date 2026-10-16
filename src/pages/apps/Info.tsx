@@ -1,5 +1,5 @@
-import { AppPlaceholder } from '../../components/AppPlaceholder';
+import { InfoView } from '../../features/info/InfoView';
 
 export function Info() {
-  return <AppPlaceholder id="info" />;
+  return <InfoView />;
 }
