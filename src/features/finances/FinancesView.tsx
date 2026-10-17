@@ -221,28 +221,30 @@ export function FinancesView() {
         </button>
       </div>
 
-      <div className="summary-grid">
-        <div className="stat-card stat-income">
-          <span>{t.finances.summary.income}</span>
-          <strong>{formatMoney(totals.income, language)}</strong>
+      {view === 'ledger' ? (
+        <div className="summary-grid">
+          <div className="stat-card stat-income">
+            <span>{t.finances.summary.income}</span>
+            <strong>{formatMoney(totals.income, language)}</strong>
+          </div>
+          <div className="stat-card stat-expense">
+            <span>{t.finances.summary.expense}</span>
+            <strong>{formatMoney(totals.expense, language)}</strong>
+          </div>
+          <div className="stat-card">
+            <span>{t.finances.summary.balance}</span>
+            <strong>{formatMoney(totals.balance, language)}</strong>
+          </div>
+          <div className="stat-card stat-receivable">
+            <span>{t.finances.summary.receivable}</span>
+            <strong>{formatMoney(totals.receivable, language)}</strong>
+          </div>
+          <div className="stat-card stat-payable">
+            <span>{t.finances.summary.payable}</span>
+            <strong>{formatMoney(totals.payable, language)}</strong>
+          </div>
         </div>
-        <div className="stat-card stat-expense">
-          <span>{t.finances.summary.expense}</span>
-          <strong>{formatMoney(totals.expense, language)}</strong>
-        </div>
-        <div className="stat-card">
-          <span>{t.finances.summary.balance}</span>
-          <strong>{formatMoney(totals.balance, language)}</strong>
-        </div>
-        <div className="stat-card stat-receivable">
-          <span>{t.finances.summary.receivable}</span>
-          <strong>{formatMoney(totals.receivable, language)}</strong>
-        </div>
-        <div className="stat-card stat-payable">
-          <span>{t.finances.summary.payable}</span>
-          <strong>{formatMoney(totals.payable, language)}</strong>
-        </div>
-      </div>
+      ) : null}
 
       {view === 'ledger' ? (
       <form className="fin-quick" onSubmit={handleQuickAdd}>
@@ -341,53 +343,57 @@ export function FinancesView() {
           {t.finances.allMonths}
         </button>
 
-        <div className="chip-group">
-          <button
-            type="button"
-            className={`chip ${direction === 'all' ? 'active' : ''}`}
-            onClick={() => setDirection('all')}
-          >
-            {t.finances.all}
-          </button>
-          <button
-            type="button"
-            className={`chip ${direction === 'income' ? 'active' : ''}`}
-            onClick={() => setDirection('income')}
-          >
-            {t.finances.income}
-          </button>
-          <button
-            type="button"
-            className={`chip ${direction === 'expense' ? 'active' : ''}`}
-            onClick={() => setDirection('expense')}
-          >
-            {t.finances.expense}
-          </button>
-        </div>
+        {view === 'ledger' ? (
+          <>
+            <div className="chip-group">
+              <button
+                type="button"
+                className={`chip ${direction === 'all' ? 'active' : ''}`}
+                onClick={() => setDirection('all')}
+              >
+                {t.finances.all}
+              </button>
+              <button
+                type="button"
+                className={`chip ${direction === 'income' ? 'active' : ''}`}
+                onClick={() => setDirection('income')}
+              >
+                {t.finances.income}
+              </button>
+              <button
+                type="button"
+                className={`chip ${direction === 'expense' ? 'active' : ''}`}
+                onClick={() => setDirection('expense')}
+              >
+                {t.finances.expense}
+              </button>
+            </div>
 
-        <div className="chip-group">
-          <button
-            type="button"
-            className={`chip ${status === 'all' ? 'active' : ''}`}
-            onClick={() => setStatus('all')}
-          >
-            {t.finances.all}
-          </button>
-          <button
-            type="button"
-            className={`chip ${status === 'paid' ? 'active' : ''}`}
-            onClick={() => setStatus('paid')}
-          >
-            {t.finances.statusPaid}
-          </button>
-          <button
-            type="button"
-            className={`chip ${status === 'pending' ? 'active' : ''}`}
-            onClick={() => setStatus('pending')}
-          >
-            {t.finances.statusPending}
-          </button>
-        </div>
+            <div className="chip-group">
+              <button
+                type="button"
+                className={`chip ${status === 'all' ? 'active' : ''}`}
+                onClick={() => setStatus('all')}
+              >
+                {t.finances.all}
+              </button>
+              <button
+                type="button"
+                className={`chip ${status === 'paid' ? 'active' : ''}`}
+                onClick={() => setStatus('paid')}
+              >
+                {t.finances.statusPaid}
+              </button>
+              <button
+                type="button"
+                className={`chip ${status === 'pending' ? 'active' : ''}`}
+                onClick={() => setStatus('pending')}
+              >
+                {t.finances.statusPending}
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {loading ? (
