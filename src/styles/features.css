@@ -361,6 +361,10 @@
   width: auto;
 }
 
+.fin-tabs {
+  margin-bottom: var(--space-4);
+}
+
 .fin-quick {
   display: flex;
   flex-wrap: wrap;

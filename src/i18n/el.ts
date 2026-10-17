@@ -143,6 +143,10 @@ const el: Translation = {
   finances: {
     add: 'Προσθήκη κίνησης',
     edit: 'Επεξεργασία κίνησης',
+    tabLedger: 'Κινήσεις',
+    tabReceipts: 'Γραμμάτια',
+    payReceipt: 'Πληρωμή γραμματίου',
+    receiptsEmpty: 'Δεν υπάρχουν γραμμάτια ακόμα.',
     income: 'Έσοδο',
     expense: 'Έξοδο',
     all: 'Όλα',
@@ -204,7 +208,7 @@ const el: Translation = {
     },
     category: {
       inspection: 'Τεχνικός έλεγχος',
-      secretariat: 'Γραμματεία',
+      secretariat: 'Γραμμάτιο',
       legalization: 'Νομιμοποίηση',
       regularization: 'Τακτοποίηση',
       topographic: 'Τοπογραφικό',

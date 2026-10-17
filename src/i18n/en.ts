@@ -142,6 +142,10 @@ const en = {
   finances: {
     add: 'Add transaction',
     edit: 'Edit transaction',
+    tabLedger: 'Transactions',
+    tabReceipts: 'Receipts',
+    payReceipt: 'Receive receipt payment',
+    receiptsEmpty: 'No receipts yet.',
     income: 'Income',
     expense: 'Expense',
     all: 'All',
@@ -203,7 +207,7 @@ const en = {
     },
     category: {
       inspection: 'Inspection',
-      secretariat: 'Secretariat',
+      secretariat: 'Receipt (secretariat)',
       legalization: 'Legalization',
       regularization: 'Regularization',
       topographic: 'Topographic',

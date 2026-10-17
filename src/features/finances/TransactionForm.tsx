@@ -23,6 +23,8 @@ interface TransactionFormProps {
   transaction: Transaction | null;
   contacts: Contact[];
   busy: boolean;
+  defaultCategory?: string;
+  defaultDirection?: TransactionDirection;
   onClose: () => void;
   onSubmit: (inputs: TransactionInput[]) => void;
 }
@@ -47,9 +49,12 @@ interface FormState {
   tags: string;
 }
 
-function buildInitialState(transaction: Transaction | null): FormState {
+function buildInitialState(
+  transaction: Transaction | null,
+  defaultDirection?: TransactionDirection,
+): FormState {
   return {
-    direction: transaction?.direction ?? 'income',
+    direction: transaction?.direction ?? defaultDirection ?? 'income',
     amount: transaction ? String(transaction.amount) : '',
     total: transaction?.total != null ? String(transaction.total) : '',
     date: transaction?.date ?? todayIso(),
@@ -84,15 +89,17 @@ export function TransactionForm({
   transaction,
   contacts,
   busy,
+  defaultCategory,
+  defaultDirection,
   onClose,
   onSubmit,
 }: TransactionFormProps) {
   const t = useI18n();
   const isEdit = !!transaction;
   const [state, setState] = useState<FormState>(() =>
-    buildInitialState(transaction),
+    buildInitialState(transaction, defaultDirection),
   );
-  const initialCategory = transaction?.category ?? 'secretariat';
+  const initialCategory = transaction?.category ?? defaultCategory ?? 'inspection';
   const [categoryChoice, setCategoryChoice] = useState<string>(() =>
     isPresetCategory(initialCategory) ? initialCategory : '__custom',
   );

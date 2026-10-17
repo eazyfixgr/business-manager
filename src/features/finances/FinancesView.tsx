@@ -52,11 +52,12 @@ export function FinancesView() {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<'ledger' | 'receipts'>('ledger');
 
   const [qDirection, setQDirection] = useState<TransactionDirection>('income');
   const [qAmount, setQAmount] = useState('');
   const [qContact, setQContact] = useState<ContactPickerValue>({});
-  const [qCategory, setQCategory] = useState('secretariat');
+  const [qCategory, setQCategory] = useState('inspection');
   const [qReference, setQReference] = useState('');
   const [qDate, setQDate] = useState(todayIso());
 
@@ -75,10 +76,16 @@ export function FinancesView() {
     return transaction.contactName ?? '';
   };
 
+  const isReceipt = (tx: Transaction) => tx.category === 'secretariat';
+
   const monthScoped = useMemo(
     () =>
-      transactions.filter((tx) => !month || tx.date.startsWith(month)),
-    [transactions, month],
+      transactions.filter(
+        (tx) =>
+          (!month || tx.date.startsWith(month)) &&
+          (view === 'receipts' ? isReceipt(tx) : !isReceipt(tx)),
+      ),
+    [transactions, month, view],
   );
 
   const filtered = useMemo(() => {
@@ -192,9 +199,26 @@ export function FinancesView() {
         <div className="page-actions">
           <button type="button" className="btn btn-primary" onClick={openCreate}>
             <Plus size={16} />
-            {t.finances.add}
+            {view === 'receipts' ? t.finances.payReceipt : t.finances.add}
           </button>
         </div>
+      </div>
+
+      <div className="segmented fin-tabs" role="group" aria-label={t.apps.finances.title}>
+        <button
+          type="button"
+          className={view === 'ledger' ? 'active' : ''}
+          onClick={() => setView('ledger')}
+        >
+          {t.finances.tabLedger}
+        </button>
+        <button
+          type="button"
+          className={view === 'receipts' ? 'active' : ''}
+          onClick={() => setView('receipts')}
+        >
+          {t.finances.tabReceipts}
+        </button>
       </div>
 
       <div className="summary-grid">
@@ -220,6 +244,7 @@ export function FinancesView() {
         </div>
       </div>
 
+      {view === 'ledger' ? (
       <form className="fin-quick" onSubmit={handleQuickAdd}>
         <div className="segmented" role="group" aria-label={t.finances.field.direction}>
           <button
@@ -287,6 +312,7 @@ export function FinancesView() {
           {t.common.add}
         </button>
       </form>
+      ) : null}
 
       <div className="toolbar">
         <div className="search-box">
@@ -373,12 +399,14 @@ export function FinancesView() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Wallet size={30} />}
-          title={t.apps.finances.title}
-          message={t.finances.emptyText}
+          title={view === 'receipts' ? t.finances.tabReceipts : t.apps.finances.title}
+          message={
+            view === 'receipts' ? t.finances.receiptsEmpty : t.finances.emptyText
+          }
           action={
             <button type="button" className="btn btn-primary" onClick={openCreate}>
               <Plus size={16} />
-              {t.finances.add}
+              {view === 'receipts' ? t.finances.payReceipt : t.finances.add}
             </button>
           }
         />
@@ -467,6 +495,8 @@ export function FinancesView() {
           transaction={editing}
           contacts={contacts}
           busy={busy}
+          defaultCategory={view === 'receipts' ? 'secretariat' : 'inspection'}
+          defaultDirection={view === 'receipts' ? 'income' : undefined}
           onClose={() => {
             setFormOpen(false);
             setEditing(null);
