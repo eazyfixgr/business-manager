@@ -19,6 +19,7 @@ export interface Transaction {
   status: TransactionStatus;
   contactId?: string;
   contactName?: string;
+  caseId?: string;
   category: string;
   reference?: string;
   method?: PaymentMethod;

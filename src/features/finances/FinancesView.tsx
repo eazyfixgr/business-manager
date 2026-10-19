@@ -27,7 +27,7 @@ import {
   type TransactionInput,
 } from '../../data/transactions';
 import { ContactPicker, type ContactPickerValue } from '../contacts/ContactPicker';
-import { isPresetCategory, PRESET_CATEGORIES } from './categories';
+import { isPresetCategory, PRESET_CATEGORIES } from '../../data/categories';
 import { TransactionForm } from './TransactionForm';
 
 type DirectionFilter = TransactionDirection | 'all';

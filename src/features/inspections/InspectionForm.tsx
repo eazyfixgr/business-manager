@@ -21,6 +21,7 @@ interface InspectionFormProps {
   contacts: Contact[];
   properties: Property[];
   busy: boolean;
+  caseId?: string;
   onClose: () => void;
   onSubmit: (input: InspectionInput) => void;
 }
@@ -67,6 +68,7 @@ export function InspectionForm({
   contacts,
   properties,
   busy,
+  caseId,
   onClose,
   onSubmit,
 }: InspectionFormProps) {
@@ -109,6 +111,7 @@ export function InspectionForm({
       contactId: state.contactId,
       contactName: state.contactId ? undefined : clean(state.contactName),
       propertyId: state.propertyId || undefined,
+      caseId,
       reference: clean(state.reference),
       date: state.date || undefined,
       status: state.status,

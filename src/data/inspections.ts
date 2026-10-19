@@ -17,6 +17,7 @@ export interface Inspection {
   title: string;
   contactId?: string;
   contactName?: string;
+  caseId?: string;
   propertyId?: string;
   reference?: string;
   date?: string;

@@ -13,7 +13,7 @@ import {
   type TransactionInput,
   type TransactionStatus,
 } from '../../data/transactions';
-import { PRESET_CATEGORIES, isPresetCategory } from './categories';
+import { PRESET_CATEGORIES, isPresetCategory } from '../../data/categories';
 import {
   ContactPicker,
   type ContactPickerValue,
@@ -25,6 +25,7 @@ interface TransactionFormProps {
   busy: boolean;
   defaultCategory?: string;
   defaultDirection?: TransactionDirection;
+  caseId?: string;
   onClose: () => void;
   onSubmit: (inputs: TransactionInput[]) => void;
 }
@@ -91,6 +92,7 @@ export function TransactionForm({
   busy,
   defaultCategory,
   defaultDirection,
+  caseId,
   onClose,
   onSubmit,
 }: TransactionFormProps) {
@@ -138,6 +140,7 @@ export function TransactionForm({
       status: state.status,
       contactId: state.contactId,
       contactName: state.contactId ? undefined : clean(state.contactName),
+      caseId,
       category,
       reference: clean(state.reference),
       method: state.method,

@@ -8,6 +8,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Todos } from './pages/apps/Todos';
 import { Partners } from './pages/apps/Partners';
 import { Clients } from './pages/apps/Clients';
+import { CasesView } from './features/cases/CasesView';
+import { CaseDetail } from './features/cases/CaseDetail';
 import { PropertiesView } from './features/properties/PropertiesView';
 import { PropertyDetail } from './features/properties/PropertyDetail';
 import { Finances } from './pages/apps/Finances';
@@ -60,6 +62,8 @@ export default function App() {
           <Route path="/todos" element={<Todos />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/cases" element={<CasesView />} />
+          <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/properties" element={<PropertiesView />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
           <Route path="/finances" element={<Finances />} />

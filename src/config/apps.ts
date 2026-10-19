@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
+  FolderKanban,
   Handshake,
   Users,
   Wallet,
@@ -12,6 +13,7 @@ import {
 
 export interface AppMeta {
   id:
+    | 'cases'
     | 'todos'
     | 'partners'
     | 'clients'
@@ -26,6 +28,7 @@ export interface AppMeta {
 }
 
 export const APPS: AppMeta[] = [
+  { id: 'cases', path: '/cases', icon: FolderKanban, color: '#7c3aed' },
   { id: 'todos', path: '/todos', icon: ClipboardList, color: '#6366f1' },
   { id: 'partners', path: '/partners', icon: Handshake, color: '#10b981' },
   { id: 'clients', path: '/clients', icon: Users, color: '#3b82f6' },
