@@ -268,7 +268,14 @@ export function CaseDetail() {
                   <span className="badge badge-neutral">
                     {t.cases.personRole[person.role as keyof typeof t.cases.personRole] ?? person.role}
                   </span>
-                  <div className="dash-item-main">{person.name}</div>
+                  <div className="dash-item-main">
+                    <div>{person.name}</div>
+                    {person.phone || person.email || person.address ? (
+                      <div className="dash-item-meta">
+                        {[person.phone, person.email, person.address].filter(Boolean).join(' · ')}
+                      </div>
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -348,6 +355,59 @@ export function CaseDetail() {
           </ul>
         </section>
       </div>
+
+      {[
+        [t.cases.field.date, item.date],
+        [t.cases.field.region, item.region],
+        [t.cases.field.localName, item.localName],
+        [t.cases.field.contractNumber, item.contractNumber],
+        [t.cases.field.notary, item.notary],
+        [t.cases.field.contractArea, item.contractArea],
+        [t.cases.field.cadastreArea, item.cadastreArea],
+        [t.cases.field.tolerance, item.tolerance],
+        [t.cases.field.propertyStreet, item.propertyStreet],
+        [t.cases.field.propertyKind, item.propertyKind],
+        [t.cases.field.kaek, item.kaek],
+        [t.cases.field.insideOutside, item.insideOutside],
+      ].some(([, value]) => value) ? (
+        <div className="dash-panel" style={{ marginBottom: 'var(--space-4)' }}>
+          <div className="dash-panel-head">
+            <h2>{t.cases.section.property}</h2>
+          </div>
+          <div className="property-meta-grid">
+            {[
+              [t.cases.field.date, item.date],
+              [t.cases.field.region, item.region],
+              [t.cases.field.localName, item.localName],
+              [t.cases.field.contractNumber, item.contractNumber],
+              [t.cases.field.notary, item.notary],
+              [t.cases.field.contractArea, item.contractArea],
+              [t.cases.field.cadastreArea, item.cadastreArea],
+              [t.cases.field.tolerance, item.tolerance],
+              [t.cases.field.propertyStreet, item.propertyStreet],
+              [t.cases.field.propertyKind, item.propertyKind],
+              [t.cases.field.kaek, item.kaek],
+              [t.cases.field.insideOutside, item.insideOutside],
+            ]
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label}>
+                  <span className="muted small">{label}</span>
+                  <div className="strong">{value}</div>
+                </div>
+              ))}
+          </div>
+          {item.documents && item.documents.length > 0 ? (
+            <div className="note-tags" style={{ marginTop: 'var(--space-3)' }}>
+              {item.documents.map((doc) => (
+                <span key={doc} className="badge badge-neutral">
+                  {doc}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="dash-panel" style={{ marginBottom: 'var(--space-4)' }}>
         <div className="dash-panel-head">

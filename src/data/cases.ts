@@ -19,6 +19,9 @@ export interface CasePerson {
   contactId?: string;
   name: string;
   role: string;
+  phone?: string;
+  email?: string;
+  address?: string;
 }
 
 export interface CasePartner {
@@ -44,6 +47,7 @@ export interface Case {
   type: CaseType;
   category: string;
   title?: string;
+  date?: string;
   status: CaseStatus;
   color: CaseColor;
   people: CasePerson[];
@@ -52,6 +56,19 @@ export interface Case {
   notes?: string;
   tags: string[];
   events: CaseEvent[];
+  // Property / cadastre details
+  region?: string;
+  localName?: string;
+  contractNumber?: string;
+  notary?: string;
+  contractArea?: string;
+  cadastreArea?: string;
+  tolerance?: string;
+  propertyStreet?: string;
+  propertyKind?: string;
+  kaek?: string;
+  insideOutside?: string;
+  documents?: string[];
 }
 
 export type CaseInput = Omit<Case, 'id' | 'ownerId'>;

@@ -17,10 +17,7 @@ import {
   type CaseStatus,
   type CaseType,
 } from '../../data/cases';
-import {
-  PRESET_CATEGORIES,
-  isPresetCategory,
-} from '../../data/categories';
+import { PRESET_CATEGORIES, isPresetCategory } from '../../data/categories';
 
 interface CaseFormProps {
   item: Case | null;
@@ -33,6 +30,7 @@ interface FormState {
   code: string;
   type: CaseType;
   title: string;
+  date: string;
   status: CaseStatus;
   color: CaseColor;
   agreedAmount: string;
@@ -40,6 +38,18 @@ interface FormState {
   partners: CasePartner[];
   tags: string;
   notes: string;
+  region: string;
+  localName: string;
+  contractNumber: string;
+  notary: string;
+  contractArea: string;
+  cadastreArea: string;
+  tolerance: string;
+  propertyStreet: string;
+  propertyKind: string;
+  kaek: string;
+  insideOutside: string;
+  documents: string;
 }
 
 function buildInitial(item: Case | null): FormState {
@@ -47,6 +57,7 @@ function buildInitial(item: Case | null): FormState {
     code: item?.code ?? '',
     type: item?.type ?? 'technical',
     title: item?.title ?? '',
+    date: item?.date ?? '',
     status: item?.status ?? 'open',
     color: item?.color ?? 'none',
     agreedAmount: item?.agreedAmount != null ? String(item.agreedAmount) : '',
@@ -54,6 +65,18 @@ function buildInitial(item: Case | null): FormState {
     partners: item?.partners ?? [],
     tags: item?.tags?.join(', ') ?? '',
     notes: item?.notes ?? '',
+    region: item?.region ?? '',
+    localName: item?.localName ?? '',
+    contractNumber: item?.contractNumber ?? '',
+    notary: item?.notary ?? '',
+    contractArea: item?.contractArea ?? '',
+    cadastreArea: item?.cadastreArea ?? '',
+    tolerance: item?.tolerance ?? '',
+    propertyStreet: item?.propertyStreet ?? '',
+    propertyKind: item?.propertyKind ?? '',
+    kaek: item?.kaek ?? '',
+    insideOutside: item?.insideOutside ?? '',
+    documents: item?.documents?.join(', ') ?? '',
   };
 }
 
@@ -96,10 +119,17 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
           ? customCategory.trim() || 'other'
           : categoryChoice,
       title: clean(state.title),
+      date: clean(state.date),
       status: state.status,
       color: state.color,
       people: state.people
-        .map((p) => ({ ...p, name: p.name.trim() }))
+        .map((p) => ({
+          ...p,
+          name: p.name.trim(),
+          phone: clean(p.phone ?? ''),
+          email: clean(p.email ?? ''),
+          address: clean(p.address ?? ''),
+        }))
         .filter((p) => p.name),
       partners: state.partners
         .map((p) => ({
@@ -115,6 +145,21 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
         .map((tag) => tag.trim())
         .filter(Boolean),
       events: item?.events ?? [],
+      region: clean(state.region),
+      localName: clean(state.localName),
+      contractNumber: clean(state.contractNumber),
+      notary: clean(state.notary),
+      contractArea: clean(state.contractArea),
+      cadastreArea: clean(state.cadastreArea),
+      tolerance: clean(state.tolerance),
+      propertyStreet: clean(state.propertyStreet),
+      propertyKind: clean(state.propertyKind),
+      kaek: clean(state.kaek),
+      insideOutside: clean(state.insideOutside),
+      documents: state.documents
+        .split(',')
+        .map((doc) => doc.trim())
+        .filter(Boolean),
     });
   };
 
@@ -143,24 +188,10 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
 
           <div className="form-grid">
             <Field label={t.cases.field.code} htmlFor="cf-code">
-              <input
-                id="cf-code"
-                className="input"
-                value={state.code}
-                onChange={(e) => set('code', e.target.value)}
-              />
+              <input id="cf-code" className="input" value={state.code} onChange={(e) => set('code', e.target.value)} />
             </Field>
-            <Field label={t.cases.field.status} htmlFor="cf-status">
-              <select
-                id="cf-status"
-                className="select"
-                value={state.status}
-                onChange={(e) => set('status', e.target.value as CaseStatus)}
-              >
-                {CASE_STATUSES.map((s) => (
-                  <option key={s} value={s}>{t.cases.status[s]}</option>
-                ))}
-              </select>
+            <Field label={t.cases.field.date} htmlFor="cf-date">
+              <input id="cf-date" className="input" type="date" value={state.date} onChange={(e) => set('date', e.target.value)} />
             </Field>
           </div>
 
@@ -168,12 +199,7 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
             <label>{t.cases.field.type}</label>
             <div className="segmented" role="group" aria-label={t.cases.field.type}>
               {CASE_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  className={state.type === type ? 'active' : ''}
-                  onClick={() => set('type', type)}
-                >
+                <button key={type} type="button" className={state.type === type ? 'active' : ''} onClick={() => set('type', type)}>
                   {t.cases.type[type]}
                 </button>
               ))}
@@ -182,27 +208,17 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
 
           <div className="form-grid">
             <Field label={t.cases.field.category} htmlFor="cf-category">
-              <select
-                id="cf-category"
-                className="select"
-                value={categoryChoice}
-                onChange={(e) => setCategoryChoice(e.target.value)}
-              >
+              <select id="cf-category" className="select" value={categoryChoice} onChange={(e) => setCategoryChoice(e.target.value)}>
                 {PRESET_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{t.finances.category[c]}</option>
                 ))}
                 <option value="__custom">{t.cases.customCategoryOption}</option>
               </select>
             </Field>
-            <Field label={t.cases.field.color} htmlFor="cf-color">
-              <select
-                id="cf-color"
-                className="select"
-                value={state.color}
-                onChange={(e) => set('color', e.target.value as CaseColor)}
-              >
-                {CASE_COLORS.map((c) => (
-                  <option key={c} value={c}>{t.cases.color[c]}</option>
+            <Field label={t.cases.field.status} htmlFor="cf-status">
+              <select id="cf-status" className="select" value={state.status} onChange={(e) => set('status', e.target.value as CaseStatus)}>
+                {CASE_STATUSES.map((s) => (
+                  <option key={s} value={s}>{t.cases.status[s]}</option>
                 ))}
               </select>
             </Field>
@@ -210,36 +226,26 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
 
           {categoryChoice === '__custom' ? (
             <Field label={t.cases.field.customCategory} htmlFor="cf-custom">
-              <input
-                id="cf-custom"
-                className="input"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-              />
+              <input id="cf-custom" className="input" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
             </Field>
           ) : null}
 
           <div className="form-grid">
             <Field label={t.cases.field.title} htmlFor="cf-title">
-              <input
-                id="cf-title"
-                className="input"
-                value={state.title}
-                onChange={(e) => set('title', e.target.value)}
-              />
+              <input id="cf-title" className="input" value={state.title} onChange={(e) => set('title', e.target.value)} />
             </Field>
-            <Field label={t.cases.field.agreed} htmlFor="cf-agreed">
-              <input
-                id="cf-agreed"
-                className="input"
-                type="number"
-                step="0.01"
-                inputMode="decimal"
-                value={state.agreedAmount}
-                onChange={(e) => set('agreedAmount', e.target.value)}
-              />
+            <Field label={t.cases.field.color} htmlFor="cf-color">
+              <select id="cf-color" className="select" value={state.color} onChange={(e) => set('color', e.target.value as CaseColor)}>
+                {CASE_COLORS.map((c) => (
+                  <option key={c} value={c}>{t.cases.color[c]}</option>
+                ))}
+              </select>
             </Field>
           </div>
+
+          <Field label={t.cases.field.agreed} htmlFor="cf-agreed">
+            <input id="cf-agreed" className="input" type="number" step="0.01" inputMode="decimal" value={state.agreedAmount} onChange={(e) => set('agreedAmount', e.target.value)} />
+          </Field>
         </section>
 
         <section className="form-section">
@@ -252,24 +258,60 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
             onChange={(v) => set('people', v)}
             renderItem={(person, patch) => (
               <>
-                <select
-                  className="select"
-                  value={person.role}
-                  onChange={(e) => patch({ role: e.target.value })}
-                >
+                <select className="select" value={person.role} onChange={(e) => patch({ role: e.target.value })}>
                   {CASE_PERSON_ROLES.map((r) => (
                     <option key={r} value={r}>{t.cases.personRole[r]}</option>
                   ))}
                 </select>
-                <input
-                  className="input"
-                  placeholder={t.cases.field.name}
-                  value={person.name}
-                  onChange={(e) => patch({ name: e.target.value })}
-                />
+                <input className="input" placeholder={t.cases.field.name} value={person.name} onChange={(e) => patch({ name: e.target.value })} />
+                <input className="input" placeholder={t.cases.field.phone} value={person.phone ?? ''} onChange={(e) => patch({ phone: e.target.value })} />
+                <input className="input" placeholder={t.cases.field.email} value={person.email ?? ''} onChange={(e) => patch({ email: e.target.value })} />
+                <input className="input" placeholder={t.cases.field.address} value={person.address ?? ''} onChange={(e) => patch({ address: e.target.value })} />
               </>
             )}
           />
+        </section>
+
+        <section className="form-section">
+          <h3 className="form-section-title">{t.cases.section.property}</h3>
+          <div className="form-grid">
+            <Field label={t.cases.field.region} htmlFor="cf-region">
+              <input id="cf-region" className="input" value={state.region} onChange={(e) => set('region', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.localName} htmlFor="cf-local">
+              <input id="cf-local" className="input" value={state.localName} onChange={(e) => set('localName', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.contractNumber} htmlFor="cf-contract">
+              <input id="cf-contract" className="input" value={state.contractNumber} onChange={(e) => set('contractNumber', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.notary} htmlFor="cf-notary">
+              <input id="cf-notary" className="input" value={state.notary} onChange={(e) => set('notary', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.contractArea} htmlFor="cf-carea">
+              <input id="cf-carea" className="input" value={state.contractArea} onChange={(e) => set('contractArea', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.cadastreArea} htmlFor="cf-karea">
+              <input id="cf-karea" className="input" value={state.cadastreArea} onChange={(e) => set('cadastreArea', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.tolerance} htmlFor="cf-tol">
+              <input id="cf-tol" className="input" value={state.tolerance} onChange={(e) => set('tolerance', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.propertyStreet} htmlFor="cf-street">
+              <input id="cf-street" className="input" value={state.propertyStreet} onChange={(e) => set('propertyStreet', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.propertyKind} htmlFor="cf-kind">
+              <input id="cf-kind" className="input" value={state.propertyKind} onChange={(e) => set('propertyKind', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.kaek} htmlFor="cf-kaek">
+              <input id="cf-kaek" className="input" value={state.kaek} onChange={(e) => set('kaek', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.insideOutside} htmlFor="cf-inout">
+              <input id="cf-inout" className="input" value={state.insideOutside} onChange={(e) => set('insideOutside', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.documents} htmlFor="cf-docs" hint={t.contacts.field.tagsHint}>
+              <input id="cf-docs" className="input" value={state.documents} onChange={(e) => set('documents', e.target.value)} />
+            </Field>
+          </div>
         </section>
 
         <section className="form-section">
@@ -282,21 +324,12 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
             onChange={(v) => set('partners', v)}
             renderItem={(partner, patch) => (
               <>
-                <select
-                  className="select"
-                  value={partner.role}
-                  onChange={(e) => patch({ role: e.target.value })}
-                >
+                <select className="select" value={partner.role} onChange={(e) => patch({ role: e.target.value })}>
                   {CASE_PARTNER_ROLES.map((r) => (
                     <option key={r} value={r}>{t.cases.partnerRole[r]}</option>
                   ))}
                 </select>
-                <input
-                  className="input"
-                  placeholder={t.cases.field.name}
-                  value={partner.name}
-                  onChange={(e) => patch({ name: e.target.value })}
-                />
+                <input className="input" placeholder={t.cases.field.name} value={partner.name} onChange={(e) => patch({ name: e.target.value })} />
                 <input
                   className="input"
                   type="number"
@@ -310,11 +343,7 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
                   }}
                 />
                 <label className="switch-row">
-                  <input
-                    type="checkbox"
-                    checked={!!partner.paid}
-                    onChange={(e) => patch({ paid: e.target.checked })}
-                  />
+                  <input type="checkbox" checked={!!partner.paid} onChange={(e) => patch({ paid: e.target.checked })} />
                   {t.cases.field.paid}
                 </label>
               </>
@@ -325,20 +354,10 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
         <section className="form-section">
           <h3 className="form-section-title">{t.cases.section.notes}</h3>
           <Field label={t.contacts.field.tags} htmlFor="cf-tags" hint={t.contacts.field.tagsHint}>
-            <input
-              id="cf-tags"
-              className="input"
-              value={state.tags}
-              onChange={(e) => set('tags', e.target.value)}
-            />
+            <input id="cf-tags" className="input" value={state.tags} onChange={(e) => set('tags', e.target.value)} />
           </Field>
           <Field label={t.contacts.field.notes} htmlFor="cf-notes">
-            <textarea
-              id="cf-notes"
-              className="textarea"
-              value={state.notes}
-              onChange={(e) => set('notes', e.target.value)}
-            />
+            <textarea id="cf-notes" className="textarea" value={state.notes} onChange={(e) => set('notes', e.target.value)} />
           </Field>
         </section>
       </form>
