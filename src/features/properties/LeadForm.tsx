@@ -2,7 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { useI18n } from '../../i18n';
-import type { Contact, ContactAssignment } from '../../data/contacts';
+import {
+  createContact,
+  newId,
+  type Contact,
+  type ContactAssignment,
+} from '../../data/contacts';
 import {
   LEAD_STAGES,
   newLeadEvent,
@@ -69,6 +74,7 @@ export function LeadForm({
   const t = useI18n();
   const [state, setState] = useState<FormState>(() => buildInitial(lead));
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setState((s) => ({ ...s, [key]: value }));
@@ -87,7 +93,7 @@ export function LeadForm({
     }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const hasIdentity =
       state.contactId ||
@@ -99,29 +105,58 @@ export function LeadForm({
       return;
     }
 
-    const offer = state.offerAmount.trim()
-      ? Number(state.offerAmount.replace(',', '.'))
-      : undefined;
+    setSaving(true);
+    try {
+      let contactId = state.contactId;
+      if (!contactId) {
+        const name =
+          state.contactName.trim() ||
+          state.phone.trim() ||
+          state.email.trim() ||
+          'Χωρίς όνομα';
+        contactId = await createContact({
+          roles: ['client', 'buyer'],
+          name,
+          phones: state.phone.trim()
+            ? [{ id: newId(), label: '', value: state.phone.trim() }]
+            : [],
+          email: clean(state.email),
+          codes: [],
+          extraContacts: [],
+          assignments: [],
+          tags: [],
+          pinned: false,
+        });
+      }
 
-    const history =
-      lead && lead.stage === state.stage
-        ? lead.history
-        : [...(lead?.history ?? []), newLeadEvent(state.stage)];
+      const offer = state.offerAmount.trim()
+        ? Number(state.offerAmount.replace(',', '.'))
+        : undefined;
 
-    onSubmit({
-      propertyId,
-      contactId: state.contactId,
-      contactName: state.contactId ? undefined : clean(state.contactName),
-      phone: clean(state.phone),
-      email: clean(state.email),
-      offerAmount: offer && !Number.isNaN(offer) ? offer : undefined,
-      stage: state.stage,
-      docsSentDate: clean(state.docsSentDate),
-      mandateDate: clean(state.mandateDate),
-      notes: clean(state.notes),
-      history,
-      assignments: state.assignments,
-    });
+      const history =
+        lead && lead.stage === state.stage
+          ? lead.history
+          : [...(lead?.history ?? []), newLeadEvent(state.stage)];
+
+      onSubmit({
+        propertyId,
+        contactId,
+        contactName: clean(state.contactName),
+        phone: clean(state.phone),
+        email: clean(state.email),
+        offerAmount: offer && !Number.isNaN(offer) ? offer : undefined,
+        stage: state.stage,
+        docsSentDate: clean(state.docsSentDate),
+        mandateDate: clean(state.mandateDate),
+        notes: clean(state.notes),
+        history,
+        assignments: state.assignments,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -143,9 +178,9 @@ export function LeadForm({
             type="submit"
             form="lead-form"
             className="btn btn-primary"
-            disabled={busy}
+            disabled={busy || saving}
           >
-            {busy ? t.common.loading : t.common.save}
+            {busy || saving ? t.common.loading : t.common.save}
           </button>
         </>
       }
