@@ -18,9 +18,11 @@ import {
   type CaseType,
 } from '../../data/cases';
 import { PRESET_CATEGORIES, isPresetCategory } from '../../data/categories';
+import type { Property } from '../../data/properties';
 
 interface CaseFormProps {
   item: Case | null;
+  properties: Property[];
   busy: boolean;
   onClose: () => void;
   onSubmit: (input: CaseInput) => void;
@@ -36,6 +38,7 @@ interface FormState {
   agreedAmount: string;
   people: CasePerson[];
   partners: CasePartner[];
+  propertyId: string;
   tags: string;
   notes: string;
   region: string;
@@ -63,6 +66,7 @@ function buildInitial(item: Case | null): FormState {
     agreedAmount: item?.agreedAmount != null ? String(item.agreedAmount) : '',
     people: item?.people ?? [],
     partners: item?.partners ?? [],
+    propertyId: item?.propertyId ?? '',
     tags: item?.tags?.join(', ') ?? '',
     notes: item?.notes ?? '',
     region: item?.region ?? '',
@@ -85,7 +89,13 @@ function clean(value: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
+export function CaseForm({
+  item,
+  properties,
+  busy,
+  onClose,
+  onSubmit,
+}: CaseFormProps) {
   const t = useI18n();
   const [state, setState] = useState<FormState>(() => buildInitial(item));
   const initialCategory = item?.category ?? 'inspection';
@@ -138,6 +148,7 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
           fee: p.fee != null && !Number.isNaN(p.fee) ? p.fee : undefined,
         }))
         .filter((p) => p.name),
+      propertyId: state.propertyId || undefined,
       agreedAmount: amount && !Number.isNaN(amount) ? amount : undefined,
       notes: clean(state.notes),
       tags: state.tags
@@ -243,9 +254,27 @@ export function CaseForm({ item, busy, onClose, onSubmit }: CaseFormProps) {
             </Field>
           </div>
 
-          <Field label={t.cases.field.agreed} htmlFor="cf-agreed">
-            <input id="cf-agreed" className="input" type="number" step="0.01" inputMode="decimal" value={state.agreedAmount} onChange={(e) => set('agreedAmount', e.target.value)} />
-          </Field>
+          <div className="form-grid">
+            <Field label={t.cases.field.agreed} htmlFor="cf-agreed">
+              <input id="cf-agreed" className="input" type="number" step="0.01" inputMode="decimal" value={state.agreedAmount} onChange={(e) => set('agreedAmount', e.target.value)} />
+            </Field>
+            <Field label={t.cases.field.property} htmlFor="cf-property">
+              <select
+                id="cf-property"
+                className="select"
+                value={state.propertyId}
+                onChange={(e) => set('propertyId', e.target.value)}
+              >
+                <option value="">—</option>
+                {properties.map((property) => (
+                  <option key={property.id} value={property.id}>
+                    {property.code}
+                    {property.sellerName ? ` — ${property.sellerName}` : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
         </section>
 
         <section className="form-section">

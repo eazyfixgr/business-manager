@@ -20,6 +20,8 @@ export interface Transaction {
   contactId?: string;
   contactName?: string;
   caseId?: string;
+  propertyId?: string;
+  partnerFee?: boolean;
   category: string;
   reference?: string;
   method?: PaymentMethod;

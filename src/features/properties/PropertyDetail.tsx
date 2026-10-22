@@ -487,6 +487,7 @@ export function PropertyDetail() {
           lead={editingLead}
           propertyId={property.id}
           contacts={contacts}
+          existingLeads={propertyLeads}
           busy={busy}
           onClose={() => {
             setLeadFormOpen(false);

@@ -16,9 +16,14 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useContacts } from '../hooks/useContacts';
 import { useAppointments } from '../hooks/useAppointments';
 import { useInspections } from '../hooks/useInspections';
+import { useCases } from '../hooks/useCases';
+import { useProperties } from '../hooks/useProperties';
+import { useLeads } from '../hooks/useLeads';
 import { PRIORITY_WEIGHT } from '../data/todos';
 import { appointmentDateTime } from '../data/appointments';
 import { OPEN_INSPECTION_STATUSES } from '../data/inspections';
+import { derivePropertyStatus } from '../data/properties';
+import { OPEN_STAGES } from '../data/leads';
 
 export function Dashboard() {
   const t = useI18n();
@@ -28,6 +33,9 @@ export function Dashboard() {
   const { contacts } = useContacts();
   const { appointments } = useAppointments();
   const { inspections } = useInspections();
+  const { cases } = useCases();
+  const { properties } = useProperties();
+  const { leads } = useLeads();
 
   const today = todayIso();
   const month = today.slice(0, 7);
@@ -65,6 +73,13 @@ export function Dashboard() {
   const pendingInspections = inspections.filter((i) =>
     OPEN_INSPECTION_STATUSES.includes(i.status),
   ).length;
+  const activeCases = cases.filter(
+    (c) => c.status !== 'done' && c.status !== 'cancelled',
+  ).length;
+  const availableProperties = properties.filter(
+    (p) => derivePropertyStatus(p, leads) === 'available',
+  ).length;
+  const activeLeads = leads.filter((l) => OPEN_STAGES.includes(l.stage)).length;
 
   const pendingTotals = useMemo(() => {
     let toReceive = 0;
@@ -120,6 +135,18 @@ export function Dashboard() {
         <Link to="/inspections" className="stat-card">
           <span>{t.dashboard.pendingInspections}</span>
           <strong>{pendingInspections}</strong>
+        </Link>
+        <Link to="/cases" className="stat-card">
+          <span>{t.dashboard.activeCases}</span>
+          <strong>{activeCases}</strong>
+        </Link>
+        <Link to="/properties" className="stat-card">
+          <span>{t.dashboard.availableProperties}</span>
+          <strong>{availableProperties}</strong>
+        </Link>
+        <Link to="/leads" className="stat-card">
+          <span>{t.dashboard.activeLeads}</span>
+          <strong>{activeLeads}</strong>
         </Link>
         <Link to="/finances" className="stat-card stat-income">
           <span>{t.dashboard.monthIncome}</span>

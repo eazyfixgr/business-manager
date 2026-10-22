@@ -2,12 +2,15 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  CalendarDays,
   CalendarPlus,
   CheckCircle2,
   Clock,
+  ListTodo,
   Loader2,
   Pencil,
   Plus,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
@@ -20,6 +23,9 @@ import { useCases } from '../../hooks/useCases';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useInspections } from '../../hooks/useInspections';
 import { useProperties } from '../../hooks/useProperties';
+import { useLeads } from '../../hooks/useLeads';
+import { useAppointments } from '../../hooks/useAppointments';
+import { useTodos } from '../../hooks/useTodos';
 import { useContacts } from '../../hooks/useContacts';
 import {
   newCaseEvent,
@@ -36,15 +42,24 @@ import {
   createInspection,
   type InspectionInput,
 } from '../../data/inspections';
+import {
+  createAppointment,
+  type AppointmentInput,
+} from '../../data/appointments';
+import { createTodo, type TodoInput } from '../../data/todos';
 import { CaseForm } from './CaseForm';
 import { TransactionForm } from '../finances/TransactionForm';
 import { InspectionForm } from '../inspections/InspectionForm';
+import { AppointmentForm } from '../appointments/AppointmentForm';
+import { TodoForm } from '../todos/TodoForm';
 
 const EVENT_TYPES = [
   'docs_sent',
   'mandate',
   'inspection',
   'payment',
+  'appointment',
+  'todo',
   'note',
   'other',
 ] as const;
@@ -58,11 +73,16 @@ export function CaseDetail() {
   const { transactions } = useTransactions();
   const { inspections } = useInspections();
   const { properties } = useProperties();
+  const { leads } = useLeads();
+  const { appointments } = useAppointments();
+  const { todos } = useTodos();
   const { contacts } = useContacts();
 
   const [formOpen, setFormOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [inspectionOpen, setInspectionOpen] = useState(false);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
+  const [todoOpen, setTodoOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [eventType, setEventType] = useState<string>('note');
@@ -81,6 +101,31 @@ export function CaseDetail() {
   const linkedInspections = useMemo(
     () => inspections.filter((i) => i.caseId === id),
     [inspections, id],
+  );
+
+  const linkedProperty = item?.propertyId
+    ? properties.find((p) => p.id === item.propertyId)
+    : undefined;
+
+  const propertyLeads = useMemo(
+    () =>
+      item?.propertyId
+        ? leads.filter((lead) => lead.propertyId === item.propertyId)
+        : [],
+    [leads, item?.propertyId],
+  );
+
+  const linkedAppointments = useMemo(
+    () =>
+      appointments
+        .filter((a) => a.caseId === id)
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    [appointments, id],
+  );
+
+  const linkedTodos = useMemo(
+    () => todos.filter((todo) => todo.caseId === id),
+    [todos, id],
   );
 
   const totals = useMemo(() => {
@@ -179,6 +224,38 @@ export function CaseDetail() {
     }
   };
 
+  const handleAppointmentSubmit = async (input: AppointmentInput) => {
+    setBusy(true);
+    try {
+      await createAppointment(input);
+      await patchCase(item.id, {
+        events: [...item.events, newCaseEvent('appointment', t.cases.appointmentEvent)],
+      });
+      notify(t.appointments.created);
+      setAppointmentOpen(false);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : String(err), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleTodoSubmit = async (input: TodoInput) => {
+    setBusy(true);
+    try {
+      await createTodo(input);
+      await patchCase(item.id, {
+        events: [...item.events, newCaseEvent('todo', t.cases.todoEvent)],
+      });
+      notify(t.todos.created);
+      setTodoOpen(false);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : String(err), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleDelete = async () => {
     setBusy(true);
     try {
@@ -207,6 +284,15 @@ export function CaseDetail() {
           </h1>
           <p className="page-subtitle">
             {t.cases.type[item.type]} · {t.cases.status[item.status]}
+            {linkedProperty ? (
+              <>
+                {' · '}
+                <Link to={`/properties/${linkedProperty.id}`}>
+                  {t.cases.field.property}: {linkedProperty.code}
+                  {linkedProperty.sellerName ? ` — ${linkedProperty.sellerName}` : ''}
+                </Link>
+              </>
+            ) : null}
           </p>
         </div>
         <div className="page-actions">
@@ -409,6 +495,36 @@ export function CaseDetail() {
         </div>
       ) : null}
 
+      {linkedProperty ? (
+        <div className="dash-panel" style={{ marginBottom: 'var(--space-4)' }}>
+          <div className="dash-panel-head">
+            <h2>
+              <Users size={16} /> {t.leads.title} — {linkedProperty.code}
+            </h2>
+            <Link to={`/properties/${linkedProperty.id}`}>{t.common.open}</Link>
+          </div>
+          {propertyLeads.length === 0 ? (
+            <p className="muted small">{t.properties.noLeads}</p>
+          ) : (
+            <ul className="dash-list">
+              {propertyLeads.map((lead) => (
+                <li key={lead.id}>
+                  <div className="dash-item-main">
+                    <div>{lead.contactName ?? lead.phone ?? lead.email ?? '—'}</div>
+                    <div className="dash-item-meta">
+                      {t.properties.stage[lead.stage]}
+                      {lead.depositAmount
+                        ? ` · ${t.properties.deposit}: ${formatMoney(lead.depositAmount, language)}`
+                        : ''}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+
       <div className="dash-panel" style={{ marginBottom: 'var(--space-4)' }}>
         <div className="dash-panel-head">
           <h2>{t.cases.payments}</h2>
@@ -486,6 +602,75 @@ export function CaseDetail() {
         )}
       </div>
 
+      <div className="dash-columns" style={{ marginTop: 'var(--space-4)' }}>
+        <section className="dash-panel">
+          <div className="dash-panel-head">
+            <h2>
+              <CalendarDays size={16} /> {t.cases.appointments}
+            </h2>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setAppointmentOpen(true)}
+            >
+              <Plus size={14} />
+              {t.cases.addAppointment}
+            </button>
+          </div>
+          {linkedAppointments.length === 0 ? (
+            <p className="muted small">{t.cases.noAppointments}</p>
+          ) : (
+            <ul className="dash-list">
+              {linkedAppointments.map((appointment) => (
+                <li key={appointment.id}>
+                  <div className="dash-item-main">
+                    <div>{appointment.title}</div>
+                    <div className="dash-item-meta">
+                      {formatDate(appointment.date)}
+                      {appointment.start ? ` · ${appointment.start}` : ''}
+                      {` · ${t.appointments.status[appointment.status]}`}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="dash-panel">
+          <div className="dash-panel-head">
+            <h2>
+              <ListTodo size={16} /> {t.cases.todos}
+            </h2>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setTodoOpen(true)}
+            >
+              <Plus size={14} />
+              {t.cases.addTodo}
+            </button>
+          </div>
+          {linkedTodos.length === 0 ? (
+            <p className="muted small">{t.cases.noTodos}</p>
+          ) : (
+            <ul className="dash-list">
+              {linkedTodos.map((todo) => (
+                <li key={todo.id}>
+                  <div className="dash-item-main">
+                    <div>{todo.title}</div>
+                    <div className="dash-item-meta">
+                      {todo.status === 'done' ? t.todos.done : t.todos.open}
+                      {todo.dueDate ? ` · ${formatDate(todo.dueDate)}` : ''}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
       {item.notes ? (
         <div className="dash-panel" style={{ marginTop: 'var(--space-4)' }}>
           <div className="dash-panel-head">
@@ -498,9 +683,34 @@ export function CaseDetail() {
       {formOpen ? (
         <CaseForm
           item={item}
+          properties={properties}
           busy={busy}
           onClose={() => setFormOpen(false)}
           onSubmit={handleCaseSubmit}
+        />
+      ) : null}
+
+      {appointmentOpen ? (
+        <AppointmentForm
+          appointment={null}
+          contacts={contacts}
+          busy={busy}
+          caseId={item.id}
+          propertyId={item.propertyId}
+          onClose={() => setAppointmentOpen(false)}
+          onSubmit={handleAppointmentSubmit}
+        />
+      ) : null}
+
+      {todoOpen ? (
+        <TodoForm
+          todo={null}
+          contacts={contacts}
+          busy={busy}
+          caseId={item.id}
+          propertyId={item.propertyId}
+          onClose={() => setTodoOpen(false)}
+          onSubmit={handleTodoSubmit}
         />
       ) : null}
 
@@ -510,6 +720,7 @@ export function CaseDetail() {
           contacts={contacts}
           busy={busy}
           caseId={item.id}
+          propertyId={item.propertyId}
           defaultCategory={item.category}
           onClose={() => setPaymentOpen(false)}
           onSubmit={handlePaymentSubmit}

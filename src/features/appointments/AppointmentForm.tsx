@@ -19,6 +19,8 @@ interface AppointmentFormProps {
   appointment: Appointment | null;
   contacts: Contact[];
   busy: boolean;
+  caseId?: string;
+  propertyId?: string;
   onClose: () => void;
   onSubmit: (input: AppointmentInput) => void;
 }
@@ -58,6 +60,8 @@ export function AppointmentForm({
   appointment,
   contacts,
   busy,
+  caseId,
+  propertyId,
   onClose,
   onSubmit,
 }: AppointmentFormProps) {
@@ -88,6 +92,8 @@ export function AppointmentForm({
       title,
       contactId: state.contactId,
       contactName: state.contactId ? undefined : clean(state.contactName),
+      caseId,
+      propertyId,
       date: state.date || todayIso(),
       start: clean(state.start),
       end: clean(state.end),

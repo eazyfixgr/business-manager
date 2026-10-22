@@ -18,6 +18,8 @@ interface TodoFormProps {
   todo: Todo | null;
   contacts: Contact[];
   busy: boolean;
+  caseId?: string;
+  propertyId?: string;
   onClose: () => void;
   onSubmit: (input: TodoInput) => void;
 }
@@ -45,6 +47,8 @@ export function TodoForm({
   todo,
   contacts,
   busy,
+  caseId,
+  propertyId,
   onClose,
   onSubmit,
 }: TodoFormProps) {
@@ -71,6 +75,8 @@ export function TodoForm({
     onSubmit({
       ...state,
       title,
+      caseId: caseId ?? state.caseId,
+      propertyId: propertyId ?? state.propertyId,
       notes: state.notes?.trim() || undefined,
       dueDate: state.dueDate || undefined,
       contactName: state.contactId ? undefined : clean(state.contactName ?? ''),

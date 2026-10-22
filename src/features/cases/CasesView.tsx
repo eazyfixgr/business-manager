@@ -8,6 +8,7 @@ import { useI18n } from '../../i18n';
 import { useSettings } from '../../context/SettingsContext';
 import { useCases } from '../../hooks/useCases';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useProperties } from '../../hooks/useProperties';
 import { formatMoney } from '../../lib/format';
 import {
   caseSearchText,
@@ -36,6 +37,7 @@ export function CasesView() {
   const navigate = useNavigate();
   const { cases, loading, error } = useCases();
   const { transactions } = useTransactions();
+  const { properties } = useProperties();
 
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -227,6 +229,7 @@ export function CasesView() {
       {formOpen ? (
         <CaseForm
           item={editing}
+          properties={properties}
           busy={busy}
           onClose={() => {
             setFormOpen(false);

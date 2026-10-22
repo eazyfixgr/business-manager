@@ -25,6 +25,7 @@ interface LeadFormProps {
   lead: Lead | null;
   propertyId: string;
   contacts: Contact[];
+  existingLeads?: Lead[];
   busy: boolean;
   onClose: () => void;
   onSubmit: (input: LeadInput) => void;
@@ -67,6 +68,7 @@ export function LeadForm({
   lead,
   propertyId,
   contacts,
+  existingLeads,
   busy,
   onClose,
   onSubmit,
@@ -107,26 +109,56 @@ export function LeadForm({
 
     setSaving(true);
     try {
+      const normPhone = (v: string) => {
+        let d = v.replace(/\D/g, '');
+        if (d.startsWith('0030')) d = d.slice(4);
+        else if (d.startsWith('30') && d.length >= 12) d = d.slice(2);
+        return d.length > 10 ? d.slice(-10) : d;
+      };
+      const name =
+        state.contactName.trim() ||
+        state.phone.trim() ||
+        state.email.trim() ||
+        'Χωρίς όνομα';
+      const newPhone = normPhone(state.phone);
+      const newEmail = (state.email || '').trim().toLowerCase();
+
       let contactId = state.contactId;
       if (!contactId) {
-        const name =
-          state.contactName.trim() ||
-          state.phone.trim() ||
-          state.email.trim() ||
-          'Χωρίς όνομα';
-        contactId = await createContact({
-          roles: ['client', 'buyer'],
-          name,
-          phones: state.phone.trim()
-            ? [{ id: newId(), label: '', value: state.phone.trim() }]
-            : [],
-          email: clean(state.email),
-          codes: [],
-          extraContacts: [],
-          assignments: [],
-          tags: [],
-          pinned: false,
+        const match = contacts.find((c) => {
+          const phoneMatch =
+            !!newPhone && c.phones.some((p) => normPhone(p.value) === newPhone);
+          const emailMatch =
+            !!newEmail && (c.email || '').toLowerCase() === newEmail;
+          const nameMatch =
+            !newPhone &&
+            !newEmail &&
+            (c.name || '').trim().toLowerCase() === name.toLowerCase();
+          return phoneMatch || emailMatch || nameMatch;
         });
+        contactId = match
+          ? match.id
+          : await createContact({
+              roles: ['client', 'buyer'],
+              name,
+              phones: state.phone.trim()
+                ? [{ id: newId(), label: '', value: state.phone.trim() }]
+                : [],
+              email: clean(state.email),
+              codes: [],
+              extraContacts: [],
+              assignments: [],
+              tags: [],
+              pinned: false,
+            });
+      }
+
+      if (
+        !lead &&
+        existingLeads?.some((l) => l.contactId === contactId)
+      ) {
+        setError(t.contacts.duplicateLead);
+        return;
       }
 
       const offer = state.offerAmount.trim()

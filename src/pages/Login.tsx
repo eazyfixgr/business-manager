@@ -6,13 +6,29 @@ import { useI18n } from '../i18n';
 type Mode = 'signin' | 'signup';
 
 export function Login() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const t = useI18n();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const onForgot = async () => {
+    setError(null);
+    setInfo(null);
+    if (!email.trim()) {
+      setError(t.auth.resetNoEmail);
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      setInfo(t.auth.resetSent);
+    } catch {
+      setError(t.auth.errorGeneric);
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,6 +63,7 @@ export function Login() {
   const switchMode = () => {
     setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
     setError(null);
+    setInfo(null);
   };
 
   const isSignup = mode === 'signup';
@@ -64,6 +81,7 @@ export function Login() {
 
         <form className="auth-form" onSubmit={onSubmit}>
           {error && <div className="auth-error">{error}</div>}
+          {info && <div className="auth-info">{info}</div>}
 
           <div className="field">
             <label htmlFor="email">{t.auth.email}</label>
@@ -105,6 +123,14 @@ export function Login() {
             )}
           </button>
         </form>
+
+        {!isSignup ? (
+          <div className="auth-forgot">
+            <button type="button" onClick={onForgot}>
+              {t.auth.forgot}
+            </button>
+          </div>
+        ) : null}
 
         <div className="auth-switch">
           {isSignup ? t.auth.haveAccount : t.auth.noAccount}{' '}

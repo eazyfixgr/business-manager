@@ -17,6 +17,7 @@ export interface Appointment {
   title: string;
   contactId?: string;
   contactName?: string;
+  caseId?: string;
   propertyId?: string;
   date: string;
   start?: string;

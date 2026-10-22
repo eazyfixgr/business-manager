@@ -35,7 +35,7 @@ interface SettingsContextValue extends SettingsState {
 
 const DEFAULTS: SettingsState = {
   theme: 'system',
-  language: 'en',
+  language: 'el',
   fontScale: 'medium',
 };
 

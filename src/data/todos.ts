@@ -19,6 +19,8 @@ export interface Todo {
   status: TodoStatus;
   contactId?: string;
   contactName?: string;
+  caseId?: string;
+  propertyId?: string;
   tags: string[];
   completedAt?: string;
 }

@@ -12,6 +12,8 @@ import { APPS } from '../config/apps';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { SettingsModal } from './SettingsModal';
+import { GlobalSearch } from './GlobalSearch';
+import { EmailVerificationBanner } from './EmailVerificationBanner';
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -125,6 +127,7 @@ export function Layout() {
           </button>
           <h1 className="topbar-title">{title}</h1>
           <div className="topbar-spacer" />
+          <GlobalSearch />
           <button
             type="button"
             className="btn btn-ghost btn-icon"
@@ -137,6 +140,7 @@ export function Layout() {
         </header>
 
         <main className="content">
+          <EmailVerificationBanner />
           <Outlet />
         </main>
       </div>

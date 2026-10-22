@@ -26,6 +26,7 @@ interface TransactionFormProps {
   defaultCategory?: string;
   defaultDirection?: TransactionDirection;
   caseId?: string;
+  propertyId?: string;
   onClose: () => void;
   onSubmit: (inputs: TransactionInput[]) => void;
 }
@@ -46,6 +47,7 @@ interface FormState {
   assignedName: string;
   partnerFee: string;
   partnerPaid: boolean;
+  isPartnerFee: boolean;
   notes: string;
   tags: string;
 }
@@ -70,6 +72,7 @@ function buildInitialState(
     assignedName: transaction?.assignedName ?? '',
     partnerFee: '',
     partnerPaid: false,
+    isPartnerFee: transaction?.partnerFee ?? false,
     notes: transaction?.notes ?? '',
     tags: transaction?.tags?.join(', ') ?? '',
   };
@@ -93,6 +96,7 @@ export function TransactionForm({
   defaultCategory,
   defaultDirection,
   caseId,
+  propertyId,
   onClose,
   onSubmit,
 }: TransactionFormProps) {
@@ -141,6 +145,8 @@ export function TransactionForm({
       contactId: state.contactId,
       contactName: state.contactId ? undefined : clean(state.contactName),
       caseId,
+      propertyId,
+      partnerFee: state.isPartnerFee,
       category,
       reference: clean(state.reference),
       method: state.method,
@@ -188,6 +194,7 @@ export function TransactionForm({
           category,
           reference: main.reference,
           notes: t.finances.partnerFeeNote,
+          partnerFee: true,
           tags: [],
         });
       }
@@ -444,6 +451,16 @@ export function TransactionForm({
                   inputId="tf-assigned-name"
                 />
               </div>
+              {state.direction === 'expense' ? (
+                <label className="switch-row">
+                  <input
+                    type="checkbox"
+                    checked={state.isPartnerFee}
+                    onChange={(e) => set('isPartnerFee', e.target.checked)}
+                  />
+                  {t.finances.field.partnerFeeFlag}
+                </label>
+              ) : null}
               {!isEdit ? (
                 <>
                   <Field

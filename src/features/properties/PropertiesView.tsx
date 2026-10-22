@@ -18,7 +18,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useContacts } from '../../hooks/useContacts';
 import { useProperties } from '../../hooks/useProperties';
 import { useLeads } from '../../hooks/useLeads';
-import { OPEN_STAGES } from '../../data/leads';
+import { OPEN_STAGES, removeLead } from '../../data/leads';
 import {
   createProperty,
   derivePropertyStatus,
@@ -52,6 +52,7 @@ export function PropertiesView() {
 
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortMode>('newest');
+  const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'all'>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Property | null>(null);
   const [deleting, setDeleting] = useState<Property | null>(null);
@@ -77,6 +78,9 @@ export function PropertiesView() {
     const term = search.trim().toLowerCase();
     return properties
       .filter((p) => !term || propertySearchText(p).includes(term))
+      .filter(
+        (p) => statusFilter === 'all' || derivePropertyStatus(p, leads) === statusFilter,
+      )
       .sort((a, b) => {
         if (sort === 'code') {
           return a.code.localeCompare(b.code, undefined, { numeric: true });
@@ -85,7 +89,7 @@ export function PropertiesView() {
         const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
         return sort === 'newest' ? bTime - aTime : aTime - bTime;
       });
-  }, [properties, search, sort]);
+  }, [properties, search, sort, statusFilter, leads]);
 
   const sellerNameOf = (property: Property): string =>
     property.sellerContactId
@@ -125,7 +129,11 @@ export function PropertiesView() {
     if (!deleting) return;
     setBusy(true);
     try {
+      const propertyLeads = leads.filter((l) => l.propertyId === deleting.id);
       await removeProperty(deleting.id);
+      for (const lead of propertyLeads) {
+        await removeLead(lead.id);
+      }
       notify(t.properties.deleted);
       setDeleting(null);
     } catch (err) {
@@ -160,6 +168,27 @@ export function PropertiesView() {
             onChange={(e) => setSearch(e.target.value)}
             aria-label={t.common.search}
           />
+        </div>
+        <div className="chip-group">
+          <button
+            type="button"
+            className={`chip ${statusFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('all')}
+          >
+            {t.leads.filterAll}
+          </button>
+          {(['available', 'has_interest', 'reserved', 'sold', 'withdrawn'] as const).map(
+            (status) => (
+              <button
+                key={status}
+                type="button"
+                className={`chip ${statusFilter === status ? 'active' : ''}`}
+                onClick={() => setStatusFilter(status)}
+              >
+                {t.properties.status[status]}
+              </button>
+            ),
+          )}
         </div>
         <select
           className="select"
@@ -297,7 +326,19 @@ export function PropertiesView() {
         danger
         busy={busy}
         title={t.properties.deleteTitle}
-        message={t.properties.deleteMessage}
+        message={
+          deleting
+            ? `${t.properties.deleteMessage}${
+                leads.some((l) => l.propertyId === deleting.id)
+                  ? ' ' +
+                    t.properties.willDeleteLeads.replace(
+                      '{count}',
+                      String(leads.filter((l) => l.propertyId === deleting.id).length),
+                    )
+                  : ''
+              }`
+            : t.properties.deleteMessage
+        }
         confirmLabel={t.common.delete}
         onConfirm={handleDelete}
         onClose={() => setDeleting(null)}

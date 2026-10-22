@@ -17,6 +17,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { formatDate, formatMoney, todayIso } from '../../lib/format';
 import { useContacts } from '../../hooks/useContacts';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useCases } from '../../hooks/useCases';
 import {
   createTransaction,
   removeTransaction,
@@ -43,6 +44,7 @@ export function FinancesView() {
   const { notify } = useToast();
   const { transactions, loading, error } = useTransactions();
   const { contacts } = useContacts();
+  const { cases } = useCases();
 
   const [search, setSearch] = useState('');
   const [month, setMonth] = useState(currentMonth);
@@ -52,7 +54,9 @@ export function FinancesView() {
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const [busy, setBusy] = useState(false);
-  const [view, setView] = useState<'ledger' | 'receipts'>('ledger');
+  const [view, setView] = useState<
+    'ledger' | 'receipts' | 'partner' | 'reports'
+  >('ledger');
 
   const [qDirection, setQDirection] = useState<TransactionDirection>('income');
   const [qAmount, setQAmount] = useState('');
@@ -64,6 +68,10 @@ export function FinancesView() {
   const nameById = useMemo(
     () => new Map(contacts.map((c) => [c.id, c.name])),
     [contacts],
+  );
+  const caseCodeById = useMemo(
+    () => new Map(cases.map((c) => [c.id, c.code])),
+    [cases],
   );
 
   const categoryLabel = (value: string): string =>
@@ -80,11 +88,13 @@ export function FinancesView() {
 
   const monthScoped = useMemo(
     () =>
-      transactions.filter(
-        (tx) =>
-          (!month || tx.date.startsWith(month)) &&
-          (view === 'receipts' ? isReceipt(tx) : !isReceipt(tx)),
-      ),
+      transactions.filter((tx) => {
+        if (month && !tx.date.startsWith(month)) return false;
+        if (view === 'receipts') return isReceipt(tx);
+        if (view === 'partner') return !!tx.partnerFee;
+        if (view === 'ledger') return !isReceipt(tx);
+        return true;
+      }),
     [transactions, month, view],
   );
 
@@ -114,6 +124,68 @@ export function FinancesView() {
     }
     return { income, expense, balance: income - expense, receivable, payable };
   }, [monthScoped]);
+
+  const categoryReport = useMemo(() => {
+    const map = new Map<
+      string,
+      { income: number; expense: number; receivable: number; payable: number }
+    >();
+    for (const tx of monthScoped) {
+      const entry =
+        map.get(tx.category) ??
+        { income: 0, expense: 0, receivable: 0, payable: 0 };
+      if (tx.status === 'paid') {
+        if (tx.direction === 'income') entry.income += tx.amount;
+        else entry.expense += tx.amount;
+      } else if (tx.direction === 'income') {
+        entry.receivable += tx.amount;
+      } else {
+        entry.payable += tx.amount;
+      }
+      map.set(tx.category, entry);
+    }
+    return [...map.entries()].sort(
+      (a, b) =>
+        b[1].income + b[1].expense + b[1].receivable + b[1].payable -
+        (a[1].income + a[1].expense + a[1].receivable + a[1].payable),
+    );
+  }, [monthScoped]);
+
+  const caseReport = useMemo(() => {
+    const map = new Map<
+      string,
+      { code: string; income: number; expense: number }
+    >();
+    for (const tx of monthScoped) {
+      if (!tx.caseId) continue;
+      const entry =
+        map.get(tx.caseId) ??
+        {
+          code: caseCodeById.get(tx.caseId) ?? '—',
+          income: 0,
+          expense: 0,
+        };
+      if (tx.status === 'paid') {
+        if (tx.direction === 'income') entry.income += tx.amount;
+        else entry.expense += tx.amount;
+      }
+      map.set(tx.caseId, entry);
+    }
+    return [...map.values()].sort(
+      (a, b) => b.income + b.expense - (a.income + a.expense),
+    );
+  }, [monthScoped, caseCodeById]);
+
+  const contactReport = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const tx of monthScoped) {
+      if (tx.direction !== 'income' || tx.status !== 'paid') continue;
+      const name =
+        (tx.contactId ? nameById.get(tx.contactId) : tx.contactName) ?? '—';
+      map.set(name, (map.get(name) ?? 0) + tx.amount);
+    }
+    return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+  }, [monthScoped, nameById]);
 
   const openCreate = () => {
     setEditing(null);
@@ -197,10 +269,12 @@ export function FinancesView() {
           <p className="page-subtitle">{t.apps.finances.description}</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-primary" onClick={openCreate}>
-            <Plus size={16} />
-            {view === 'receipts' ? t.finances.payReceipt : t.finances.add}
-          </button>
+          {view !== 'reports' ? (
+            <button type="button" className="btn btn-primary" onClick={openCreate}>
+              <Plus size={16} />
+              {view === 'receipts' ? t.finances.payReceipt : t.finances.add}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -219,9 +293,23 @@ export function FinancesView() {
         >
           {t.finances.tabReceipts}
         </button>
+        <button
+          type="button"
+          className={view === 'partner' ? 'active' : ''}
+          onClick={() => setView('partner')}
+        >
+          {t.finances.tabPartner}
+        </button>
+        <button
+          type="button"
+          className={view === 'reports' ? 'active' : ''}
+          onClick={() => setView('reports')}
+        >
+          {t.finances.tabReports}
+        </button>
       </div>
 
-      {view === 'ledger' ? (
+      {view === 'ledger' || view === 'partner' ? (
         <div className="summary-grid">
           <div className="stat-card stat-income">
             <span>{t.finances.summary.income}</span>
@@ -402,6 +490,85 @@ export function FinancesView() {
         </div>
       ) : error ? (
         <div className="form-error">{error}</div>
+      ) : view === 'reports' ? (
+        <div>
+          <div className="dash-panel" style={{ marginBottom: 'var(--space-4)' }}>
+            <div className="dash-panel-head">
+              <h2>{t.finances.reportByCategory}</h2>
+            </div>
+            {categoryReport.length === 0 ? (
+              <p className="muted small">{t.finances.noData}</p>
+            ) : (
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>{t.finances.field.category}</th>
+                    <th>{t.finances.income}</th>
+                    <th>{t.finances.expense}</th>
+                    <th>{t.finances.summary.receivable}</th>
+                    <th>{t.finances.summary.payable}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoryReport.map(([category, row]) => (
+                    <tr key={category}>
+                      <td>{categoryLabel(category)}</td>
+                      <td>{formatMoney(row.income, language)}</td>
+                      <td>{formatMoney(row.expense, language)}</td>
+                      <td>{formatMoney(row.receivable, language)}</td>
+                      <td>{formatMoney(row.payable, language)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="dash-columns">
+            <div className="dash-panel">
+              <div className="dash-panel-head">
+                <h2>{t.finances.reportByCase}</h2>
+              </div>
+              {caseReport.length === 0 ? (
+                <p className="muted small">{t.finances.noData}</p>
+              ) : (
+                <ul className="dash-list">
+                  {caseReport.map((row) => (
+                    <li key={row.code}>
+                      <div className="dash-item-main">
+                        <div>{row.code}</div>
+                        <div className="dash-item-meta">
+                          +{formatMoney(row.income, language)} · −
+                          {formatMoney(row.expense, language)}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="dash-panel">
+              <div className="dash-panel-head">
+                <h2>{t.finances.reportByContact}</h2>
+              </div>
+              {contactReport.length === 0 ? (
+                <p className="muted small">{t.finances.noData}</p>
+              ) : (
+                <ul className="dash-list">
+                  {contactReport.map(([name, total]) => (
+                    <li key={name}>
+                      <div className="dash-item-main">{name}</div>
+                      <span className="tx-amount tx-income">
+                        {formatMoney(total, language)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Wallet size={30} />}

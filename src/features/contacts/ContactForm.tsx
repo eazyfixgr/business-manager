@@ -89,6 +89,7 @@ export function ContactForm({
     buildInitialState(contact, defaultRole),
   );
   const [error, setError] = useState<string | null>(null);
+  const [dupConfirmed, setDupConfirmed] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setState((s) => ({ ...s, [key]: value }));
@@ -122,6 +123,31 @@ export function ContactForm({
     const phones = state.phones
       .map((p) => ({ ...p, label: p.label.trim(), value: p.value.trim() }))
       .filter((p) => p.value);
+
+    if (!dupConfirmed) {
+      const normPhone = (v: string) => {
+        let d = v.replace(/\D/g, '');
+        if (d.startsWith('0030')) d = d.slice(4);
+        else if (d.startsWith('30') && d.length >= 12) d = d.slice(2);
+        return d.length > 10 ? d.slice(-10) : d;
+      };
+      const newPhones = new Set(
+        phones.map((p) => normPhone(p.value)).filter(Boolean),
+      );
+      const newEmail = (state.email || '').trim().toLowerCase();
+      const duplicate = contacts.find((c) => {
+        if (contact && c.id === contact.id) return false;
+        const phoneMatch = c.phones.some((p) => newPhones.has(normPhone(p.value)));
+        const emailMatch =
+          !!newEmail && (c.email || '').toLowerCase() === newEmail;
+        return phoneMatch || emailMatch;
+      });
+      if (duplicate) {
+        setDupConfirmed(true);
+        setError(t.contacts.duplicateWarning.replace('{name}', duplicate.name));
+        return;
+      }
+    }
 
     const codes = state.codes
       .map((c) => ({ ...c, value: c.value.trim(), label: clean(c.label ?? '') }))

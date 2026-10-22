@@ -52,6 +52,7 @@ export interface Case {
   color: CaseColor;
   people: CasePerson[];
   partners: CasePartner[];
+  propertyId?: string;
   agreedAmount?: number;
   notes?: string;
   tags: string[];
