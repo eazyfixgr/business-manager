@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Building2,
@@ -6,6 +6,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Users,
 } from 'lucide-react';
 import { APPS } from '../config/apps';
 import { useI18n } from '../i18n';
@@ -22,8 +23,9 @@ export function Layout() {
   const currentApp = APPS.find((a) =>
     location.pathname.startsWith(a.path),
   );
-  const title =
-    location.pathname === '/'
+  const title = location.pathname.startsWith('/leads')
+    ? t.leads.title
+    : location.pathname === '/'
       ? t.nav.dashboard
       : currentApp
         ? t.apps[currentApp.id].title
@@ -64,17 +66,30 @@ export function Layout() {
           {APPS.map((app) => {
             const Icon = app.icon;
             return (
-              <NavLink
-                key={app.id}
-                to={app.path}
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? 'active' : ''}`
-                }
-              >
-                <Icon size={18} />
-                {t.apps[app.id].short}
-              </NavLink>
+              <Fragment key={app.id}>
+                <NavLink
+                  to={app.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={({ isActive }) =>
+                    `nav-item ${isActive ? 'active' : ''}`
+                  }
+                >
+                  <Icon size={18} />
+                  {t.apps[app.id].short}
+                </NavLink>
+                {app.id === 'properties' ? (
+                  <NavLink
+                    to="/leads"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) =>
+                      `nav-item nav-sub ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <Users size={16} />
+                    {t.leads.title}
+                  </NavLink>
+                ) : null}
+              </Fragment>
             );
           })}
         </nav>

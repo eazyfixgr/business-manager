@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 import { useI18n } from '../../i18n';
-import type { Contact } from '../../data/contacts';
+import type { Contact, ContactRole } from '../../data/contacts';
 import { QuickContactDialog } from './QuickContactDialog';
 
 export interface ContactPickerValue {
@@ -17,6 +17,7 @@ interface ContactPickerProps {
   namePlaceholder: string;
   freeTextLabel: string;
   inputId?: string;
+  quickAddRole?: ContactRole;
 }
 
 function matches(contact: Contact, term: string): boolean {
@@ -42,6 +43,7 @@ export function ContactPicker({
   namePlaceholder,
   freeTextLabel,
   inputId,
+  quickAddRole,
 }: ContactPickerProps) {
   const t = useI18n();
   const [quickOpen, setQuickOpen] = useState(false);
@@ -154,6 +156,7 @@ export function ContactPicker({
 
       <QuickContactDialog
         open={quickOpen}
+        role={quickAddRole}
         onClose={() => setQuickOpen(false)}
         onCreated={(contact) => {
           onChange({ contactId: contact.id, contactName: contact.name });

@@ -76,6 +76,7 @@ export interface Contact {
   address?: ContactAddress;
   notes?: string;
   specialty?: string;
+  profession?: string;
   codes: ContactCode[];
   extraContacts: ExtraContact[];
   assignments: ContactAssignment[];
@@ -170,6 +171,7 @@ export function contactSearchText(contact: Contact): string {
     contact.name,
     contact.email,
     contact.specialty,
+    contact.profession,
     ...phones,
     ...codes,
     ...extras,

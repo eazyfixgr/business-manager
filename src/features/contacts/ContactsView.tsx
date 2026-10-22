@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Briefcase,
   Loader2,
@@ -38,6 +39,7 @@ interface ContactsViewProps {
 
 export function ContactsView({ role }: ContactsViewProps) {
   const t = useI18n();
+  const navigate = useNavigate();
   const { notify } = useToast();
   const { contacts, loading, error } = useContacts();
 
@@ -216,7 +218,17 @@ export function ContactsView({ role }: ContactsViewProps) {
       ) : (
         <div className="contact-list">
           {filtered.map((contact) => (
-            <div className="contact-row" key={contact.id}>
+            <div
+              className="contact-row clickable"
+              key={contact.id}
+              onClick={() =>
+                navigate(
+                  role === 'partner'
+                    ? `/partners/${contact.id}`
+                    : `/clients/${contact.id}`,
+                )
+              }
+            >
               <span className="contact-avatar">{contactInitial(contact)}</span>
 
               <div className="contact-main">
@@ -231,7 +243,7 @@ export function ContactsView({ role }: ContactsViewProps) {
                   ) : null}
                 </div>
 
-                {contact.roles.length > 0 || contact.specialty || contact.codes.length > 0 ? (
+                {contact.roles.length > 0 || contact.specialty || contact.profession || contact.codes.length > 0 ? (
                   <div className="contact-badges">
                     {contact.roles.map((r) => (
                       <span key={r} className="badge badge-neutral">
@@ -240,6 +252,9 @@ export function ContactsView({ role }: ContactsViewProps) {
                     ))}
                     {contact.specialty ? (
                       <span className="badge badge-accent">{contact.specialty}</span>
+                    ) : null}
+                    {contact.profession ? (
+                      <span className="badge badge-neutral">{contact.profession}</span>
                     ) : null}
                     {contact.codes.map((code) => (
                       <span
@@ -292,7 +307,10 @@ export function ContactsView({ role }: ContactsViewProps) {
                 <button
                   type="button"
                   className={`btn btn-ghost btn-icon ${contact.pinned ? 'pin-on' : ''}`}
-                  onClick={() => togglePin(contact)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePin(contact);
+                  }}
                   title={t.contacts.field.pinned}
                   aria-label={t.contacts.field.pinned}
                 >
@@ -301,7 +319,10 @@ export function ContactsView({ role }: ContactsViewProps) {
                 <button
                   type="button"
                   className="btn btn-ghost btn-icon"
-                  onClick={() => openEdit(contact)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(contact);
+                  }}
                   title={t.common.edit}
                   aria-label={t.common.edit}
                 >
@@ -310,7 +331,10 @@ export function ContactsView({ role }: ContactsViewProps) {
                 <button
                   type="button"
                   className="btn btn-ghost btn-icon btn-icon-danger"
-                  onClick={() => setDeleting(contact)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleting(contact);
+                  }}
                   title={t.common.delete}
                   aria-label={t.common.delete}
                 >

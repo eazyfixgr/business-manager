@@ -2,9 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { useI18n } from '../../i18n';
-import type { Contact } from '../../data/contacts';
+import type { Contact, ContactAssignment } from '../../data/contacts';
 import {
-  PROPERTY_STATUSES,
+  PROPERTY_MANUAL_STATUSES,
   type Property,
   type PropertyInput,
   type PropertyStatus,
@@ -13,6 +13,7 @@ import {
   ContactPicker,
   type ContactPickerValue,
 } from '../contacts/ContactPicker';
+import { PartnerAssignmentsEditor } from '../contacts/PartnerAssignmentsEditor';
 
 interface PropertyFormProps {
   property: Property | null;
@@ -32,6 +33,7 @@ interface FormState {
   status: PropertyStatus;
   notes: string;
   tags: string;
+  assignments: ContactAssignment[];
 }
 
 function buildInitial(property: Property | null): FormState {
@@ -45,6 +47,7 @@ function buildInitial(property: Property | null): FormState {
     status: property?.status ?? 'available',
     notes: property?.notes ?? '',
     tags: property?.tags?.join(', ') ?? '',
+    assignments: property?.assignments ?? [],
   };
 }
 
@@ -99,6 +102,7 @@ export function PropertyForm({
         .split(',')
         .map((tag) => tag.trim())
         .filter(Boolean),
+      assignments: state.assignments,
     });
   };
 
@@ -148,7 +152,7 @@ export function PropertyForm({
               value={state.status}
               onChange={(e) => set('status', e.target.value as PropertyStatus)}
             >
-              {PROPERTY_STATUSES.map((status) => (
+              {PROPERTY_MANUAL_STATUSES.map((status) => (
                 <option key={status} value={status}>
                   {t.properties.status[status]}
                 </option>
@@ -173,24 +177,23 @@ export function PropertyForm({
           />
         </div>
 
-        <div className="form-grid">
-          <Field label={t.properties.field.title} htmlFor="pf-title">
-            <input
-              id="pf-title"
-              className="input"
-              value={state.title}
-              onChange={(e) => set('title', e.target.value)}
-            />
-          </Field>
-          <Field label={t.properties.field.location} htmlFor="pf-location">
-            <input
-              id="pf-location"
-              className="input"
-              value={state.location}
-              onChange={(e) => set('location', e.target.value)}
-            />
-          </Field>
-        </div>
+        <section className="form-section">
+          <h3 className="form-section-title">{t.contacts.section.assignments}</h3>
+          <PartnerAssignmentsEditor
+            value={state.assignments}
+            contacts={contacts}
+            onChange={(v) => set('assignments', v)}
+          />
+        </section>
+
+        <Field label={t.properties.field.location} htmlFor="pf-location">
+          <input
+            id="pf-location"
+            className="input"
+            value={state.location}
+            onChange={(e) => set('location', e.target.value)}
+          />
+        </Field>
 
         <div className="form-grid">
           <Field label={t.properties.field.price} htmlFor="pf-price">
@@ -217,6 +220,15 @@ export function PropertyForm({
             />
           </Field>
         </div>
+
+        <Field label={t.properties.field.title} htmlFor="pf-title">
+          <textarea
+            id="pf-title"
+            className="textarea"
+            value={state.title}
+            onChange={(e) => set('title', e.target.value)}
+          />
+        </Field>
 
         <Field label={t.properties.field.notes} htmlFor="pf-notes">
           <textarea

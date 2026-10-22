@@ -10,6 +10,8 @@ import { Partners } from './pages/apps/Partners';
 import { Clients } from './pages/apps/Clients';
 import { CasesView } from './features/cases/CasesView';
 import { CaseDetail } from './features/cases/CaseDetail';
+import { LeadsView } from './features/leads/LeadsView';
+import { ContactDetail } from './features/contacts/ContactDetail';
 import { PropertiesView } from './features/properties/PropertiesView';
 import { PropertyDetail } from './features/properties/PropertyDetail';
 import { Finances } from './pages/apps/Finances';
@@ -62,6 +64,9 @@ export default function App() {
           <Route path="/todos" element={<Todos />} />
           <Route path="/partners" element={<Partners />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ContactDetail />} />
+          <Route path="/partners/:id" element={<ContactDetail />} />
+          <Route path="/leads" element={<LeadsView />} />
           <Route path="/cases" element={<CasesView />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/properties" element={<PropertiesView />} />

@@ -1,3 +1,4 @@
+import type { ContactAssignment } from './contacts';
 import {
   createOwned,
   removeOwned,
@@ -9,7 +10,6 @@ export type LeadStage =
   | 'interested'
   | 'docs_sent'
   | 'mandate_signed'
-  | 'price_issue'
   | 'not_interested'
   | 'won';
 
@@ -32,8 +32,11 @@ export interface Lead {
   stage: LeadStage;
   docsSentDate?: string;
   mandateDate?: string;
+  depositAmount?: number;
+  depositDate?: string;
   notes?: string;
   history: LeadEvent[];
+  assignments?: ContactAssignment[];
 }
 
 export type LeadInput = Omit<Lead, 'id' | 'ownerId'>;
@@ -44,7 +47,6 @@ export const LEAD_STAGES: LeadStage[] = [
   'interested',
   'docs_sent',
   'mandate_signed',
-  'price_issue',
   'not_interested',
   'won',
 ];
@@ -53,14 +55,20 @@ export const OPEN_STAGES: LeadStage[] = [
   'interested',
   'docs_sent',
   'mandate_signed',
-  'price_issue',
 ];
+
+export function leadHasStage(lead: Lead, stage: LeadStage): boolean {
+  return lead.history.some((event) => event.stage === stage);
+}
 
 function normalizeLead(raw: Lead): Lead {
   return {
     ...raw,
     stage: raw.stage ?? 'interested',
+    depositAmount:
+      raw.depositAmount != null ? Number(raw.depositAmount) : undefined,
     history: raw.history ?? [],
+    assignments: raw.assignments ?? [],
   };
 }
 

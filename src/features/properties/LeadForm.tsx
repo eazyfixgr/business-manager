@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { useI18n } from '../../i18n';
-import type { Contact } from '../../data/contacts';
+import type { Contact, ContactAssignment } from '../../data/contacts';
 import {
   LEAD_STAGES,
   newLeadEvent,
@@ -14,6 +14,7 @@ import {
   ContactPicker,
   type ContactPickerValue,
 } from '../contacts/ContactPicker';
+import { PartnerAssignmentsEditor } from '../contacts/PartnerAssignmentsEditor';
 
 interface LeadFormProps {
   lead: Lead | null;
@@ -34,6 +35,7 @@ interface FormState {
   docsSentDate: string;
   mandateDate: string;
   notes: string;
+  assignments: ContactAssignment[];
 }
 
 function buildInitial(lead: Lead | null): FormState {
@@ -47,6 +49,7 @@ function buildInitial(lead: Lead | null): FormState {
     docsSentDate: lead?.docsSentDate ?? '',
     mandateDate: lead?.mandateDate ?? '',
     notes: lead?.notes ?? '',
+    assignments: lead?.assignments ?? [],
   };
 }
 
@@ -72,10 +75,15 @@ export function LeadForm({
   };
 
   const handleContact = (value: ContactPickerValue) => {
+    const selected = value.contactId
+      ? contacts.find((c) => c.id === value.contactId)
+      : undefined;
     setState((s) => ({
       ...s,
       contactId: value.contactId,
       contactName: value.contactName ?? '',
+      phone: selected?.phones[0]?.value ?? s.phone,
+      email: selected?.email ?? s.email,
     }));
   };
 
@@ -112,6 +120,7 @@ export function LeadForm({
       mandateDate: clean(state.mandateDate),
       notes: clean(state.notes),
       history,
+      assignments: state.assignments,
     });
   };
 
@@ -231,6 +240,15 @@ export function LeadForm({
             />
           </Field>
         </div>
+
+        <section className="form-section">
+          <h3 className="form-section-title">{t.contacts.section.assignments}</h3>
+          <PartnerAssignmentsEditor
+            value={state.assignments}
+            contacts={contacts}
+            onChange={(v) => set('assignments', v)}
+          />
+        </section>
 
         <Field label={t.contacts.field.notes} htmlFor="lf-notes">
           <textarea

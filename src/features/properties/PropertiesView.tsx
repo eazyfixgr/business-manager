@@ -7,6 +7,7 @@ import {
   Plus,
   Search,
   Trash2,
+  Users,
 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -20,6 +21,7 @@ import { useLeads } from '../../hooks/useLeads';
 import { OPEN_STAGES } from '../../data/leads';
 import {
   createProperty,
+  derivePropertyStatus,
   propertySearchText,
   removeProperty,
   updateProperty,
@@ -31,11 +33,13 @@ import { PropertyForm } from './PropertyForm';
 
 const STATUS_BADGE: Record<PropertyStatus, string> = {
   available: 'badge-accent',
-  negotiation: 'badge-warning',
+  has_interest: 'badge-warning',
   reserved: 'badge-warning',
   sold: 'badge-success',
   withdrawn: 'badge-neutral',
 };
+
+type SortMode = 'newest' | 'oldest' | 'code';
 
 export function PropertiesView() {
   const t = useI18n();
@@ -47,6 +51,7 @@ export function PropertiesView() {
   const { contacts } = useContacts();
 
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortMode>('newest');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Property | null>(null);
   const [deleting, setDeleting] = useState<Property | null>(null);
@@ -72,10 +77,15 @@ export function PropertiesView() {
     const term = search.trim().toLowerCase();
     return properties
       .filter((p) => !term || propertySearchText(p).includes(term))
-      .sort((a, b) =>
-        a.code.localeCompare(b.code, undefined, { numeric: true }),
-      );
-  }, [properties, search]);
+      .sort((a, b) => {
+        if (sort === 'code') {
+          return a.code.localeCompare(b.code, undefined, { numeric: true });
+        }
+        const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+        const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+        return sort === 'newest' ? bTime - aTime : aTime - bTime;
+      });
+  }, [properties, search, sort]);
 
   const sellerNameOf = (property: Property): string =>
     property.sellerContactId
@@ -151,6 +161,24 @@ export function PropertiesView() {
             aria-label={t.common.search}
           />
         </div>
+        <select
+          className="select"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortMode)}
+          aria-label={t.properties.sort}
+        >
+          <option value="newest">{t.properties.sortNewest}</option>
+          <option value="oldest">{t.properties.sortOldest}</option>
+          <option value="code">{t.properties.sortCode}</option>
+        </select>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => navigate('/leads')}
+        >
+          <Users size={16} />
+          {t.leads.title}
+        </button>
       </div>
 
       {loading ? (
@@ -182,6 +210,7 @@ export function PropertiesView() {
           {filtered.map((property) => {
             const stats = leadStats.get(property.id);
             const seller = sellerNameOf(property);
+            const status = derivePropertyStatus(property, leads);
             return (
               <div
                 className="contact-row clickable"
@@ -197,8 +226,8 @@ export function PropertiesView() {
                     {seller ? (
                       <span className="muted small">{seller}</span>
                     ) : null}
-                    <span className={`badge ${STATUS_BADGE[property.status]}`}>
-                      {t.properties.status[property.status]}
+                    <span className={`badge ${STATUS_BADGE[status]}`}>
+                      {t.properties.status[status]}
                     </span>
                   </div>
                   {property.title || property.location ? (

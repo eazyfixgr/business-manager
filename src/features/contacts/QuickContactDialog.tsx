@@ -2,17 +2,24 @@ import { useState, type FormEvent } from 'react';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { useI18n } from '../../i18n';
-import { createContact, newId, type ContactInput } from '../../data/contacts';
+import {
+  createContact,
+  newId,
+  type ContactInput,
+  type ContactRole,
+} from '../../data/contacts';
 
 interface QuickContactDialogProps {
   open: boolean;
   onClose: () => void;
+  role?: ContactRole;
   onCreated: (contact: { id: string; name: string }) => void;
 }
 
 export function QuickContactDialog({
   open,
   onClose,
+  role = 'client',
   onCreated,
 }: QuickContactDialogProps) {
   const t = useI18n();
@@ -42,7 +49,7 @@ export function QuickContactDialog({
     setBusy(true);
     try {
       const input: ContactInput = {
-        roles: ['client'],
+        roles: [role],
         name: trimmed,
         phones: phone.trim()
           ? [{ id: newId(), label: '', value: phone.trim() }]

@@ -38,6 +38,7 @@ interface FormState {
   postalCode: string;
   country: string;
   specialty: string;
+  profession: string;
   codes: ContactCode[];
   extraContacts: ExtraContact[];
   assignments: ContactAssignment[];
@@ -60,6 +61,7 @@ function buildInitialState(
     postalCode: contact?.address?.postalCode ?? '',
     country: contact?.address?.country ?? '',
     specialty: contact?.specialty ?? '',
+    profession: contact?.profession ?? '',
     codes: contact?.codes ?? [],
     extraContacts: contact?.extraContacts ?? [],
     assignments: contact?.assignments ?? [],
@@ -152,6 +154,7 @@ export function ContactForm({
       address: hasAddress ? address : undefined,
       notes: clean(state.notes),
       specialty: clean(state.specialty),
+      profession: clean(state.profession),
       codes,
       extraContacts,
       assignments,
@@ -224,6 +227,18 @@ export function ContactForm({
               })}
             </div>
           </div>
+
+          <Field
+            label={t.contacts.field.profession}
+            htmlFor="cf-profession"
+          >
+            <input
+              id="cf-profession"
+              className="input"
+              value={state.profession}
+              onChange={(e) => set('profession', e.target.value)}
+            />
+          </Field>
 
           <Field
             label={t.contacts.field.specialty}

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  Banknote,
   Check,
-  Clock,
   FileText,
   Loader2,
   MapPin,
@@ -26,6 +26,7 @@ import { useLeads } from '../../hooks/useLeads';
 import { createTodo } from '../../data/todos';
 import {
   createLead,
+  leadHasStage,
   newLeadEvent,
   patchLead,
   removeLead,
@@ -35,6 +36,7 @@ import {
   type LeadStage,
 } from '../../data/leads';
 import {
+  derivePropertyStatus,
   propertyLabel,
   updateProperty,
   type PropertyInput,
@@ -43,18 +45,9 @@ import {
 import { LeadForm } from './LeadForm';
 import { PropertyForm } from './PropertyForm';
 
-const STAGE_BADGE: Record<LeadStage, string> = {
-  interested: 'badge-accent',
-  docs_sent: 'badge-accent',
-  mandate_signed: 'badge-success',
-  price_issue: 'badge-warning',
-  not_interested: 'badge-neutral',
-  won: 'badge-success',
-};
-
 const PROPERTY_BADGE: Record<PropertyStatus, string> = {
   available: 'badge-accent',
-  negotiation: 'badge-warning',
+  has_interest: 'badge-warning',
   reserved: 'badge-warning',
   sold: 'badge-success',
   withdrawn: 'badge-neutral',
@@ -62,6 +55,7 @@ const PROPERTY_BADGE: Record<PropertyStatus, string> = {
 
 export function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const t = useI18n();
   const { language } = useSettings();
   const { notify } = useToast();
@@ -80,6 +74,9 @@ export function PropertyDetail() {
     stage: LeadStage;
   } | null>(null);
   const [stageDate, setStageDate] = useState(todayIso());
+  const [depositPrompt, setDepositPrompt] = useState<Lead | null>(null);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositDate, setDepositDate] = useState(todayIso());
 
   const nameById = useMemo(
     () => new Map(contacts.map((c) => [c.id, c.name])),
@@ -178,6 +175,35 @@ export function PropertyDetail() {
     }
   };
 
+  const handleDeposit = async () => {
+    if (!depositPrompt) return;
+    const amount = Number(depositAmount.replace(',', '.'));
+    if (!depositAmount.trim() || Number.isNaN(amount) || amount <= 0) {
+      notify(t.properties.depositRequired, 'error');
+      return;
+    }
+    const at = depositDate || todayIso();
+    try {
+      await patchLead(depositPrompt.id, {
+        depositAmount: amount,
+        depositDate: at,
+        history: [
+          ...depositPrompt.history,
+          newLeadEvent(
+            depositPrompt.stage,
+            at,
+            `${t.properties.deposit}: ${formatMoney(amount, language)}`,
+          ),
+        ],
+      });
+      notify(t.properties.depositSaved);
+      setDepositPrompt(null);
+      setDepositAmount('');
+    } catch (err) {
+      notify(err instanceof Error ? err.message : String(err), 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-loading">
@@ -201,10 +227,11 @@ export function PropertyDetail() {
     );
   }
 
+  const derivedStatus = derivePropertyStatus(property, leads);
+
   const actions: { stage: LeadStage; label: string; icon: typeof Check }[] = [
     { stage: 'docs_sent', label: t.properties.action.docsSent, icon: FileText },
     { stage: 'mandate_signed', label: t.properties.action.mandate, icon: Check },
-    { stage: 'price_issue', label: t.properties.action.priceIssue, icon: Clock },
     { stage: 'not_interested', label: t.properties.action.notInterested, icon: X },
     { stage: 'won', label: t.properties.action.won, icon: Check },
   ];
@@ -245,8 +272,8 @@ export function PropertyDetail() {
 
       <div className="property-meta card">
         <div className="property-meta-head">
-          <span className={`badge ${PROPERTY_BADGE[property.status]}`}>
-            {t.properties.status[property.status]}
+          <span className={`badge ${PROPERTY_BADGE[derivedStatus]}`}>
+            {t.properties.status[derivedStatus]}
           </span>
         </div>
         <div className="property-meta-grid">
@@ -269,6 +296,18 @@ export function PropertyDetail() {
             </div>
           ) : null}
         </div>
+        {property.assignments && property.assignments.length > 0 ? (
+          <div className="note-tags">
+            {property.assignments.map((assignment) => (
+              <span key={assignment.id} className="badge badge-neutral">
+                {t.contacts.assignmentType[assignment.type]}:{' '}
+                {assignment.contactId
+                  ? nameById.get(assignment.contactId) ?? assignment.name
+                  : assignment.name}
+              </span>
+            ))}
+          </div>
+        ) : null}
         {property.notes ? <p className="muted small">{property.notes}</p> : null}
       </div>
 
@@ -299,14 +338,38 @@ export function PropertyDetail() {
             <div className="lead-card" key={lead.id}>
               <div className="lead-head">
                 <div>
-                  <div className="lead-name">{leadName(lead)}</div>
+                  <button
+                    type="button"
+                    className="lead-name lead-name-button"
+                    onClick={() => {
+                      if (lead.contactId) navigate(`/clients/${lead.contactId}`);
+                    }}
+                  >
+                    {leadName(lead)}
+                  </button>
                   <div className="lead-sub muted small">
                     {[lead.phone, lead.email].filter(Boolean).join(' · ')}
                   </div>
+                  {lead.depositAmount ? (
+                    <div className="lead-sub muted small">
+                      {t.properties.deposit}: {formatMoney(lead.depositAmount, language)}
+                      {lead.depositDate ? ` · ${formatDate(lead.depositDate)}` : ''}
+                    </div>
+                  ) : null}
+                  {lead.assignments && lead.assignments.length > 0 ? (
+                    <div className="lead-sub muted small">
+                      {lead.assignments
+                        .map((assignment) => {
+                          const name = assignment.contactId
+                            ? nameById.get(assignment.contactId) ??
+                              assignment.name
+                            : assignment.name;
+                          return `${t.contacts.assignmentType[assignment.type]}: ${name}`;
+                        })
+                        .join(' · ')}
+                    </div>
+                  ) : null}
                 </div>
-                <span className={`badge ${STAGE_BADGE[lead.stage]}`}>
-                  {t.properties.stage[lead.stage]}
-                </span>
                 {lead.offerAmount ? (
                   <span className="lead-offer">
                     {t.properties.offers}: {formatMoney(lead.offerAmount, language)}
@@ -340,12 +403,17 @@ export function PropertyDetail() {
               <div className="lead-actions">
                 {actions.map((action) => {
                   const Icon = action.icon;
-                  const active = lead.stage === action.stage;
+                  const onceOnly =
+                    action.stage === 'docs_sent' ||
+                    action.stage === 'mandate_signed';
+                  const done = onceOnly && leadHasStage(lead, action.stage);
+                  const active = lead.stage === action.stage || done;
                   return (
                     <button
                       key={action.stage}
                       type="button"
                       className={`btn btn-outline btn-sm ${active ? 'active-action' : ''}`}
+                      disabled={done}
                       onClick={() => {
                         setStagePrompt({ lead, stage: action.stage });
                         setStageDate(todayIso());
@@ -356,6 +424,20 @@ export function PropertyDetail() {
                     </button>
                   );
                 })}
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    setDepositPrompt(lead);
+                    setDepositAmount(
+                      lead.depositAmount ? String(lead.depositAmount) : '',
+                    );
+                    setDepositDate(lead.depositDate || todayIso());
+                  }}
+                >
+                  <Banknote size={13} />
+                  {t.properties.deposit}
+                </button>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"
@@ -462,6 +544,53 @@ export function PropertyDetail() {
             onChange={(e) => setStageDate(e.target.value)}
           />
         </Field>
+        <p className="muted small" style={{ marginTop: 'var(--space-2)' }}>
+          {formatDate(stageDate)}
+        </p>
+      </Modal>
+
+      <Modal
+        open={!!depositPrompt}
+        title={t.properties.deposit}
+        onClose={() => setDepositPrompt(null)}
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setDepositPrompt(null)}
+            >
+              {t.common.cancel}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleDeposit}>
+              {t.common.confirm}
+            </button>
+          </>
+        }
+      >
+        <Field label={t.properties.field.depositAmount} htmlFor="deposit-amount">
+          <input
+            id="deposit-amount"
+            className="input"
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+          />
+        </Field>
+        <Field label={t.properties.when} htmlFor="deposit-date">
+          <input
+            id="deposit-date"
+            className="input"
+            type="date"
+            value={depositDate}
+            onChange={(e) => setDepositDate(e.target.value)}
+          />
+        </Field>
+        <p className="muted small" style={{ marginTop: 'var(--space-2)' }}>
+          {formatDate(depositDate)}
+        </p>
       </Modal>
     </div>
   );

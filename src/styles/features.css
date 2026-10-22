@@ -96,7 +96,8 @@
   flex: 1;
 }
 
-.dynamic-row-fields > .field {
+.dynamic-row-fields > .field,
+.dynamic-row-fields > .partner-picker-cell {
   grid-column: 1 / -1;
 }
 
@@ -1030,6 +1031,25 @@ a.stat-card:hover {
 
 .case-event-form input[type='date'] {
   flex: 0 0 150px;
+}
+
+/* ---------- Sub-navigation & lead name ---------- */
+.nav-item.nav-sub {
+  padding-left: calc(var(--space-3) + 26px);
+  font-size: 0.86rem;
+}
+
+.lead-name-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+}
+
+.lead-name-button:hover {
+  color: var(--accent);
 }
 
 /* ---------- Toast (extended) ---------- */
